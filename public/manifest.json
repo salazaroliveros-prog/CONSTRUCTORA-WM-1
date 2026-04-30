@@ -1,0 +1,22 @@
+{
+  "name": "CONSTRUCTORA WM/M&S",
+  "short_name": "Construm&S",
+  "description": "Plataforma integrada de control operativo, APU y gestión de proyectos.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0c0f10",
+  "theme_color": "#1a2b44",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISE%C3%91O%20LOGO%20CONSTRUCTORA%20WM.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISE%C3%91O%20LOGO%20CONSTRUCTORA%20WM.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
