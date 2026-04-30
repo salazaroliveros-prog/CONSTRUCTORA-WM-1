@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CONSTRUCTORA WM/M&amp;S - Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Work+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-tertiary": "#412d00", "on-tertiary-fixed": "#261900", "tertiary-fixed": "#ffdea5", surface: "#111415", secondary: "#bdc7d9", "on-error-container": "#ffdad6", "tertiary-container": "#392700", "on-secondary-fixed-variant": "#3e4756", "secondary-fixed": "#d9e3f5", "on-secondary": "#27313f", "tertiary-fixed-dim": "#e9c176", "on-tertiary-fixed-variant": "#5d4201", "surface-container-highest": "#323536", outline: "#8e9098", "on-primary-fixed": "#091c34", "outline-variant": "#44474d", "primary-container": "#1a2b44", "on-primary-container": "#8292b0", "secondary-fixed-dim": "#bdc7d9", "inverse-surface": "#e1e3e4", "on-tertiary-container": "#af8c47", "surface-container-lowest": "#0c0f10", "on-secondary-container": "#acb6c7", "on-secondary-fixed": "#121c29", "surface-bright": "#373a3b", "surface-variant": "#323536", "on-primary-fixed-variant": "#374762", "inverse-primary": "#4f5f7b", "surface-container-high": "#282a2b", tertiary: "#e9c176", "error-container": "#93000a", "on-surface": "#e1e3e4", "primary-fixed-dim": "#b6c7e7", primary: "#b6c7e7", "on-surface-variant": "#c5c6ce", "secondary-container": "#3e4756", error: "#ffb4ab", "surface-dim": "#111415", "surface-container": "#1d2021", "inverse-on-surface": "#2e3132", "surface-tint": "#b6c7e7", "on-primary": "#20314a", "surface-container-low": "#191c1d", "on-error": "#690005", "primary-fixed": "#d5e3ff", background: "#111415", "on-background": "#e1e3e4"}, borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"}, spacing: {gutter: "16px", "data-tight": "4px", base: "8px", "section-gap": "64px", "container-padding": "32px", margin: "24px", xs: "4px", xl: "48px", lg: "24px", sm: "8px", md: "16px"}, fontFamily: {h1: ["Inter"], "body-md": ["Inter"], h3: ["Inter"], caption: ["Inter"], h2: ["Inter"], "body-lg": ["Inter"], "data-label": ["Work Sans"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Work Sans"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "label-md": ["Work Sans"]}, fontSize: {h1: ["40px", {lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], h3: ["24px", {lineHeight: "1.4", letterSpacing: "0", fontWeight: "600"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], h2: ["32px", {lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}], "data-label": ["14px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.4", letterSpacing: "0.02em", fontWeight: "500"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md h-screen overflow-hidden flex selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- SideNavBar (Shared Component) -->
+<aside class="bg-slate-50 dark:bg-slate-950 h-screen w-64 border-r fixed left-0 top-0 z-40 border-r border-slate-300 dark:border-slate-800 shadow-sm dark:shadow-none flex flex-col h-full py-6 px-4">
+<!-- Brand / Header -->
+<div class="mb-8 px-2">
+<h1 class="text-lg font-black text-[#1A2B44] dark:text-white tracking-tighter uppercase leading-tight">CONSTRUCTORA WM/M&amp;S</h1>
+<p class="font-['Inter'] text-sm font-medium tracking-tight text-slate-500 mt-1">Edificando el Futuro</p>
+</div>
+<!-- Navigation Tabs -->
+<nav class="flex-1 space-y-1">
+<!-- Active Tab: Dashboard -->
+<a class="bg-slate-200 dark:bg-slate-800 text-[#1A2B44] dark:text-white border-l-4 border-[#1A2B44] font-bold flex items-center gap-3 px-3 py-2.5 rounded-r-DEFAULT active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-['Inter'] text-sm tracking-tight">Dashboard</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors flex items-center gap-3 px-3 py-2.5 rounded-r-DEFAULT border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+<span class="font-['Inter'] text-sm font-medium tracking-tight">Presupuesto (APU)</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors flex items-center gap-3 px-3 py-2.5 rounded-r-DEFAULT border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">query_stats</span>
+<span class="font-['Inter'] text-sm font-medium tracking-tight">Seguimiento de Proyectos</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors flex items-center gap-3 px-3 py-2.5 rounded-r-DEFAULT border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">construction</span>
+<span class="font-['Inter'] text-sm font-medium tracking-tight">Control Operativo</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors flex items-center gap-3 px-3 py-2.5 rounded-r-DEFAULT border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-['Inter'] text-sm font-medium tracking-tight">Administración</span>
+</a>
+</nav>
+<!-- Footer Tabs -->
+<div class="mt-auto space-y-1 pt-4 border-t border-slate-200 dark:border-slate-800">
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors flex items-center gap-3 px-3 py-2.5 rounded-r-DEFAULT border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span class="font-['Inter'] text-sm font-medium tracking-tight">Soporte</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors flex items-center gap-3 px-3 py-2.5 rounded-r-DEFAULT border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="font-['Inter'] text-sm font-medium tracking-tight">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<div class="flex-1 ml-64 flex flex-col h-screen w-[calc(100%-16rem)]">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-white dark:bg-slate-900 docked full-width top-0 sticky z-30 border-b-4 border-b-4 border-[#1A2B44] flat no shadows flex justify-between items-center h-20 px-8">
+<!-- Contextual Navigation Links -->
+<div class="flex items-center gap-8 font-['Inter'] uppercase text-xs font-bold tracking-widest">
+<a class="text-[#1A2B44] border-b-2 border-[#1A2B44] pb-1 hover:opacity-80 transition-opacity cursor-pointer active:opacity-70" href="#">Proyectos</a>
+<a class="text-slate-400 hover:text-[#1A2B44] dark:hover:text-white pb-1 border-b-2 border-transparent hover:opacity-80 transition-opacity cursor-pointer active:opacity-70" href="#">Reportes</a>
+<a class="text-slate-400 hover:text-[#1A2B44] dark:hover:text-white pb-1 border-b-2 border-transparent hover:opacity-80 transition-opacity cursor-pointer active:opacity-70" href="#">Archivos</a>
+</div>
+<!-- Trailing Actions & Profile -->
+<div class="flex items-center gap-6 text-[#1A2B44] dark:text-slate-200">
+<!-- Clock Element -->
+<div class="hidden lg:flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-DEFAULT border border-outline-variant mr-2">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+<span class="font-data-label text-data-label text-on-surface tracking-widest">14:32:00</span>
+</div>
+<button class="hover:opacity-80 transition-opacity cursor-pointer active:opacity-70 flex items-center justify-center relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+<div class="text-right hidden md:block">
+<p class="font-data-label text-[11px] uppercase tracking-wider text-on-surface">Arquitecto Principal</p>
+<p class="font-body-md text-sm font-semibold text-primary">A. Rivera</p>
+</div>
+<button class="hover:opacity-80 transition-opacity cursor-pointer active:opacity-70 w-10 h-10 rounded-full bg-surface-variant overflow-hidden border border-outline-variant flex items-center justify-center">
+<img alt="Lead Architect Profile" class="w-full h-full object-cover" data-alt="professional portrait of an architect in modern corporate setting, natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCPmDfc1tbsKp6kaOhJB2r8o0Q32dre2ZxNeJyVmR-4iN_qUF5JIV2ysGbAHuc5VaTmKvW1ra47SXWnp-2tfJgqWhUADZnEynNppCGZ5qk06r8BF3Yq81gTSxvy5gYykhhZ9RpmV9BOKCbQHGyJqrstklY3pYerVYB3aj4Zcjk0T1gxeN5E2tVhlpRyfzMACArKmpdmKtgBCuPSBHantfKJeSEOINTOHQKsYKdQW5Lem1yDdP5ABtwzKzrl5ydcXk30b4PzgtUkDHs"/>
+</button>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<main class="flex-1 p-container-padding overflow-y-auto bg-surface-container-lowest grid grid-cols-12 gap-gutter content-start">
+<!-- Section Header -->
+<div class="col-span-12 flex justify-between items-end mb-2">
+<div>
+<h2 class="font-h2 text-h2 text-primary">Centro de Comando</h2>
+<p class="font-caption text-caption text-secondary mt-1 uppercase tracking-widest">Resumen de Operaciones en Vivo</p>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-DEFAULT font-data-label text-data-label hover:bg-primary-fixed-dim hover:text-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Nuevo Proyecto
+                </button>
+</div>
+<!-- KPI Row (Power BI Style) -->
+<!-- KPI 1 -->
+<div class="col-span-3 bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col justify-between shadow-[0_4px_20px_rgba(26,43,68,0.05)] relative overflow-hidden group hover:-translate-y-0.5 transition-transform">
+<div class="flex justify-between items-start mb-4">
+<span class="font-data-label text-data-label text-secondary uppercase">Total de Proyectos</span>
+<span class="material-symbols-outlined text-outline">corporate_fare</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-h1 text-h1 text-primary">42</span>
+<span class="font-caption text-caption text-surface-tint">+3 este trimestre</span>
+</div>
+<div class="absolute bottom-0 left-0 h-1 bg-primary w-full opacity-20"></div>
+</div>
+<!-- KPI 2 (Highlight) -->
+<div class="col-span-3 bg-tertiary-fixed border border-tertiary-fixed-dim rounded-DEFAULT p-4 flex flex-col justify-between shadow-[0_4px_20px_rgba(26,43,68,0.05)] relative overflow-hidden group hover:-translate-y-0.5 transition-transform">
+<div class="flex justify-between items-start mb-4">
+<span class="font-data-label text-data-label text-on-tertiary-fixed-variant uppercase">Presupuesto Activo</span>
+<span class="material-symbols-outlined text-on-tertiary-fixed-variant">account_balance</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-h1 text-h1 text-on-tertiary-fixed">Q12.5M</span>
+</div>
+<!-- Sparkline mock -->
+<div class="mt-4 flex items-end gap-1 h-6 w-full">
+<div class="bg-on-tertiary-fixed-variant w-1/6 h-1/3 rounded-t-[1px]"></div>
+<div class="bg-on-tertiary-fixed-variant w-1/6 h-1/2 rounded-t-[1px]"></div>
+<div class="bg-on-tertiary-fixed-variant w-1/6 h-full rounded-t-[1px]"></div>
+<div class="bg-on-tertiary-fixed-variant w-1/6 h-2/3 rounded-t-[1px]"></div>
+<div class="bg-on-tertiary-fixed-variant w-1/6 h-5/6 rounded-t-[1px]"></div>
+<div class="bg-on-tertiary-fixed-variant w-1/6 h-full rounded-t-[1px]"></div>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="col-span-3 bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col justify-between shadow-[0_4px_20px_rgba(26,43,68,0.05)] relative overflow-hidden group hover:-translate-y-0.5 transition-transform">
+<div class="flex justify-between items-start mb-4">
+<span class="font-data-label text-data-label text-secondary uppercase">Progreso Promedio</span>
+<span class="material-symbols-outlined text-outline">trending_up</span>
+</div>
+<div class="flex items-baseline gap-2 mb-3">
+<span class="font-h1 text-h1 text-primary">68%</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full w-[68%]"></div>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="col-span-3 bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col justify-between shadow-[0_4px_20px_rgba(26,43,68,0.05)] relative overflow-hidden group hover:-translate-y-0.5 transition-transform">
+<div class="flex justify-between items-start mb-2">
+<span class="font-data-label text-data-label text-secondary uppercase">Próximo Hito</span>
+<span class="material-symbols-outlined text-outline">flag</span>
+</div>
+<div>
+<h3 class="font-h3 text-[20px] leading-tight text-primary font-semibold mb-1 truncate">Vertido de Cimientos - PRJ-009</h3>
+<div class="flex items-center gap-1.5 text-error mt-2">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span class="font-caption text-caption uppercase tracking-wider">Vence en 2 días</span>
+</div>
+</div>
+</div>
+<!-- Main Interactive Section (Row 2) -->
+<!-- Charts Column -->
+<div class="col-span-8 grid grid-rows-2 gap-gutter">
+<!-- Chart 1: Income vs Expenses -->
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(26,43,68,0.05)] flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-data-label text-data-label text-primary uppercase tracking-widest">Ingresos vs Gastos (T3)</h3>
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<!-- Mock Chart Area -->
+<div class="flex-1 flex items-end gap-data-tight relative pt-4">
+<!-- Grid lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+<div class="border-t border-primary/5 w-full h-0"></div>
+<div class="border-t border-primary/5 w-full h-0"></div>
+<div class="border-t border-primary/5 w-full h-0"></div>
+<div class="border-t border-primary/5 w-full h-0"></div>
+</div>
+<!-- Bars -->
+<div class="flex-1 flex justify-center items-end gap-1 group">
+<div class="w-8 bg-primary h-[60%] rounded-t-DEFAULT transition-all group-hover:opacity-80"></div>
+<div class="w-8 bg-surface-tint h-[40%] rounded-t-DEFAULT transition-all group-hover:opacity-80"></div>
+</div>
+<div class="flex-1 flex justify-center items-end gap-1 group">
+<div class="w-8 bg-primary h-[80%] rounded-t-DEFAULT transition-all group-hover:opacity-80"></div>
+<div class="w-8 bg-surface-tint h-[55%] rounded-t-DEFAULT transition-all group-hover:opacity-80"></div>
+</div>
+<div class="flex-1 flex justify-center items-end gap-1 group">
+<div class="w-8 bg-primary h-[45%] rounded-t-DEFAULT transition-all group-hover:opacity-80"></div>
+<div class="w-8 bg-surface-tint h-[30%] rounded-t-DEFAULT transition-all group-hover:opacity-80"></div>
+</div>
+<div class="flex-1 flex justify-center items-end gap-1 group">
+<div class="w-8 bg-primary h-[90%] rounded-t-DEFAULT transition-all group-hover:opacity-80"></div>
+<div class="w-8 bg-surface-tint h-[65%] rounded-t-DEFAULT transition-all group-hover:opacity-80"></div>
+</div>
+</div>
+<!-- X Axis Labels -->
+<div class="flex justify-between mt-3 font-caption text-caption text-secondary px-8">
+<span>Jul</span>
+<span>Ago</span>
+<span>Sep</span>
+<span>Oct</span>
+</div>
+</div>
+<!-- Chart 2: Project Health -->
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(26,43,68,0.05)] flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-data-label text-data-label text-primary uppercase tracking-widest">Índice de Salud del Proyecto</h3>
+<span class="font-caption text-caption bg-surface-variant px-2 py-1 rounded-DEFAULT text-on-surface-variant">En Vivo</span>
+</div>
+<div class="flex-1 flex flex-col justify-center gap-4">
+<!-- Metric 1 -->
+<div>
+<div class="flex justify-between mb-1 font-caption text-caption">
+<span class="text-on-surface">Integridad Estructural (PRJ-001)</span>
+<span class="text-primary font-semibold">98%</span>
+</div>
+<div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full w-[98%]"></div>
+</div>
+</div>
+<!-- Metric 2 -->
+<div>
+<div class="flex justify-between mb-1 font-caption text-caption">
+<span class="text-on-surface">Variación de Presupuesto (Todos)</span>
+<span class="text-tertiary-container font-semibold">8%</span>
+</div>
+<div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+<div class="bg-tertiary-container h-full rounded-full w-[8%]"></div>
+</div>
+</div>
+<!-- Metric 3 -->
+<div>
+<div class="flex justify-between mb-1 font-caption text-caption">
+<span class="text-on-surface">Cumplimiento del Cronograma</span>
+<span class="text-secondary font-semibold">85%</span>
+</div>
+<div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full rounded-full w-[85%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Actions & Calendar Column -->
+<div class="col-span-4 flex flex-col gap-gutter">
+<!-- Quick Actions -->
+<div class="grid grid-cols-2 gap-data-tight">
+<button class="bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col items-center justify-center gap-2 hover:bg-surface-variant transition-colors shadow-sm group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">account_balance_wallet</span>
+<span class="font-data-label text-[12px] text-primary uppercase tracking-wider">Presupuesto</span>
+</button>
+<button class="bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col items-center justify-center gap-2 hover:bg-surface-variant transition-colors shadow-sm group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">architecture</span>
+<span class="font-data-label text-[12px] text-primary uppercase tracking-wider">Seguimiento</span>
+</button>
+<button class="col-span-2 bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col items-center justify-center gap-2 hover:bg-surface-variant transition-colors shadow-sm group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">receipt_long</span>
+<span class="font-data-label text-[12px] text-primary uppercase tracking-wider">Gastos</span>
+</button>
+</div>
+<!-- Activity Calendar -->
+<div class="flex-1 bg-surface border border-outline-variant rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(26,43,68,0.05)] flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-data-label text-data-label text-primary uppercase tracking-widest">Octubre</h3>
+<div class="flex gap-2">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+</div>
+</div>
+<!-- Calendar Grid -->
+<div class="grid grid-cols-7 gap-1 text-center font-caption text-[11px] text-secondary mb-2 uppercase">
+<div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sá</div>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center font-body-md text-sm">
+<!-- Empty slots -->
+<div class="py-1 text-outline-variant">29</div>
+<div class="py-1 text-outline-variant">30</div>
+<!-- Days -->
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">1</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">2</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer relative">
+                            3
+                            <span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></span>
+</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">4</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">5</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">6</div>
+<div class="py-1 bg-primary text-on-primary rounded font-semibold shadow-sm cursor-pointer">7</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">8</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">9</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer relative">
+                            10
+                            <span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-error rounded-full"></span>
+</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">11</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">12</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">13</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">14</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">15</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">16</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">17</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">18</div>
+<div class="py-1 hover:bg-surface-variant rounded cursor-pointer">19</div>
+</div>
+<!-- Legend -->
+<div class="mt-auto pt-4 flex gap-4 border-t border-outline-variant/50">
+<div class="flex items-center gap-1.5 font-caption text-[11px] text-secondary">
+<span class="w-2 h-2 bg-primary rounded-full"></span> Visita de Obra
+                        </div>
+<div class="flex items-center gap-1.5 font-caption text-[11px] text-secondary">
+<span class="w-2 h-2 bg-error rounded-full"></span> Fecha Límite
+                        </div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

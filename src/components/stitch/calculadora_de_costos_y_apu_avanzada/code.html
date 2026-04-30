@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="light dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Advanced Budgeting and APU - CONSTRUCTORA WM/M&amp;S</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Work+Sans:wght@600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-tertiary": "#412d00", "on-tertiary-fixed": "#261900", "tertiary-fixed": "#ffdea5", surface: "#111415", secondary: "#bdc7d9", "on-error-container": "#ffdad6", "tertiary-container": "#392700", "on-secondary-fixed-variant": "#3e4756", "secondary-fixed": "#d9e3f5", "on-secondary": "#27313f", "tertiary-fixed-dim": "#e9c176", "on-tertiary-fixed-variant": "#5d4201", "surface-container-highest": "#323536", outline: "#8e9098", "on-primary-fixed": "#091c34", "outline-variant": "#44474d", "primary-container": "#1a2b44", "on-primary-container": "#8292b0", "secondary-fixed-dim": "#bdc7d9", "inverse-surface": "#e1e3e4", "on-tertiary-container": "#af8c47", "surface-container-lowest": "#0c0f10", "on-secondary-container": "#acb6c7", "on-secondary-fixed": "#121c29", "surface-bright": "#373a3b", "surface-variant": "#323536", "on-primary-fixed-variant": "#374762", "inverse-primary": "#4f5f7b", "surface-container-high": "#282a2b", tertiary: "#e9c176", "error-container": "#93000a", "on-surface": "#e1e3e4", "primary-fixed-dim": "#b6c7e7", primary: "#b6c7e7", "on-surface-variant": "#c5c6ce", "secondary-container": "#3e4756", error: "#ffb4ab", "surface-dim": "#111415", "surface-container": "#1d2021", "inverse-on-surface": "#2e3132", "surface-tint": "#b6c7e7", "on-primary": "#20314a", "surface-container-low": "#191c1d", "on-error": "#690005", "primary-fixed": "#d5e3ff", background: "#111415", "on-background": "#e1e3e4"}, borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"}, spacing: {gutter: "16px", "data-tight": "4px", base: "8px", "section-gap": "64px", "container-padding": "32px", margin: "24px", xs: "4px", xl: "48px", lg: "24px", sm: "8px", md: "16px"}, fontFamily: {h1: ["Inter"], "body-md": ["Inter"], h3: ["Inter"], caption: ["Inter"], h2: ["Inter"], "body-lg": ["Inter"], "data-label": ["Work Sans"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Work Sans"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "label-md": ["Work Sans"]}, fontSize: {h1: ["40px", {lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], h3: ["24px", {lineHeight: "1.4", letterSpacing: "0", fontWeight: "600"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], h2: ["32px", {lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}], "data-label": ["14px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.4", letterSpacing: "0.02em", fontWeight: "500"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        /* Custom scrollbar for data dense areas */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c5c6ce;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #75777e;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased overflow-hidden flex">
+<!-- JSON Component: SideNavBar -->
+<nav class="bg-slate-50 dark:bg-slate-950 h-screen w-64 border-r fixed left-0 top-0 z-40 border-r border-slate-300 dark:border-slate-800 shadow-sm dark:shadow-none flex flex-col h-full py-6 px-4">
+<div class="mb-8 flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded bg-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-white icon-fill">domain</span>
+</div>
+<div>
+<h1 class="text-lg font-black text-[#1A2B44] dark:text-white tracking-tighter leading-none">CONSTRUCTORA WM/M&amp;S</h1>
+<span class="font-['Inter'] text-[10px] font-medium tracking-tight text-slate-500 uppercase mt-1 block">Edificando el Futuro</span>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<!-- Inactive Tab 0 -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors active:scale-95 transition-transform duration-150 font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+                Dashboard
+            </a>
+<!-- Active Tab 1 (Budgeting APU) -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded bg-slate-200 dark:bg-slate-800 text-[#1A2B44] dark:text-white border-l-4 border-[#1A2B44] font-bold active:scale-95 transition-transform duration-150 font-['Inter'] text-sm tracking-tight" href="#">
+<span class="material-symbols-outlined text-[20px] icon-fill">payments</span>
+                Budgeting (APU)
+            </a>
+<!-- Inactive Tab 2 -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors active:scale-95 transition-transform duration-150 font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined text-[20px]">query_stats</span>
+                Project Tracking
+            </a>
+<!-- Inactive Tab 3 -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors active:scale-95 transition-transform duration-150 font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined text-[20px]">construction</span>
+                Operational Control
+            </a>
+<!-- Inactive Tab 4 -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors active:scale-95 transition-transform duration-150 font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                Administration
+            </a>
+</div>
+<div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+                Support
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+                Log Out
+            </a>
+</div>
+</nav>
+<!-- JSON Component: TopNavBar -->
+<header class="bg-white dark:bg-slate-900 docked full-width top-0 sticky z-30 border-b-4 border-[#1A2B44] flat no shadows ml-64 flex justify-between items-center h-20 px-8 w-[calc(100%-16rem)] fixed right-0">
+<div class="flex items-center gap-8">
+<div class="text-xl font-extrabold text-[#1A2B44] dark:text-white font-['Inter'] tracking-tight">CONSTRUCTORA WM/M&amp;S</div>
+<nav class="hidden md:flex gap-6 pt-2">
+<!-- Assuming no active state here since focus is on SideNav, using inactive for all based on logic, or making first active if needed. Let's make none active as context is driven by sidenav -->
+<a class="text-slate-400 hover:text-[#1A2B44] dark:hover:text-white font-['Inter'] uppercase text-xs font-bold tracking-widest cursor-pointer active:opacity-70 hover:opacity-80 transition-opacity pb-1" href="#">Projects</a>
+<a class="text-slate-400 hover:text-[#1A2B44] dark:hover:text-white font-['Inter'] uppercase text-xs font-bold tracking-widest cursor-pointer active:opacity-70 hover:opacity-80 transition-opacity pb-1" href="#">Reports</a>
+<a class="text-slate-400 hover:text-[#1A2B44] dark:hover:text-white font-['Inter'] uppercase text-xs font-bold tracking-widest cursor-pointer active:opacity-70 hover:opacity-80 transition-opacity pb-1" href="#">Archives</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative bg-slate-100 rounded-full flex items-center px-3 py-1.5 border border-slate-200">
+<span class="material-symbols-outlined text-slate-400 text-sm mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 text-[#1A2B44] placeholder-slate-400 p-0 font-['Inter']" placeholder="Search..." type="text"/>
+</div>
+<div class="flex items-center gap-2 text-slate-400">
+<button class="p-1 hover:text-[#1A2B44] hover:opacity-80 transition-opacity cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-1 hover:text-[#1A2B44] hover:opacity-80 transition-opacity cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined">schedule</span>
+</button>
+<button class="p-1 hover:text-[#1A2B44] hover:opacity-80 transition-opacity cursor-pointer active:opacity-70">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-slate-200 border border-slate-300 ml-2">
+<img alt="Lead Architect Profile" class="w-full h-full object-cover" data-alt="Professional headshot of a mature male architect in a modern office setting, wearing a dark suit" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClxnGdqItqrgwW32KhwoET_D_x_tX1K0nKcsd-UG6_9aWMTF3AL6oqlsrmCeiqmSk2POmMEkBKaLxJEy6dMVQ9sRi2GmKSIxmSe-hcl-muQAvD0QTqI7s3eJaGaDNzDsrsXSDr89BrkaY62CUW7FXdvbVfd6P8KddRYzkZvPXWqPGwJ9sX5WXG9MZWWnghE2fRRGJpycOAMoT-lpNi3iYTmb6ALkanEqvW8NX7z3kPMkKEWwG0rXTTYsOnhGLXBaxQeLhYKc2QmU86"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="ml-64 mt-20 p-container-padding w-[calc(100%-16rem)] h-[calc(100vh-5rem)] overflow-y-auto bg-surface">
+<!-- Report Header (Letterhead Style) -->
+<div class="mb-gutter pb-base border-b-[3px] border-primary-container flex items-end justify-between">
+<div class="w-[62%] flex items-center gap-6">
+<div class="w-16 h-16 bg-primary-container rounded flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-white text-3xl icon-fill">architecture</span>
+</div>
+<div class="h-12 w-px bg-outline-variant"></div>
+<div>
+<h2 class="font-h2 text-h2 text-primary-container">Análisis de Precios Unitarios</h2>
+<p class="font-body-md text-body-md text-secondary mt-1">Presupuesto Maestro - Fase Estructural</p>
+</div>
+</div>
+<div class="w-[38%] flex flex-col items-end gap-2 text-right">
+<div class="flex gap-4">
+<div class="flex flex-col items-end">
+<span class="font-data-label text-data-label text-outline uppercase">Project ID</span>
+<span class="font-body-md text-body-md font-semibold text-primary-container">PRJ-2024-089</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-label text-data-label text-outline uppercase">Date</span>
+<span class="font-body-md text-body-md font-semibold text-primary-container">Oct 24, 2023</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-data-label text-data-label text-outline uppercase">Lead Architect</span>
+<span class="font-body-md text-body-md font-semibold text-primary-container">Ing. Carlos Mendoza</span>
+</div>
+</div>
+</div>
+<!-- Controls Section -->
+<div class="flex justify-between items-center mb-gutter">
+<!-- Typology Filters -->
+<div class="flex bg-surface-container-low border border-outline-variant rounded p-1">
+<button class="px-4 py-1.5 rounded bg-white shadow-sm border border-outline-variant font-data-label text-data-label text-primary-container">Residencial</button>
+<button class="px-4 py-1.5 rounded hover:bg-surface-container text-secondary font-data-label text-data-label transition-colors">Comercial</button>
+<button class="px-4 py-1.5 rounded hover:bg-surface-container text-secondary font-data-label text-data-label transition-colors">Industrial</button>
+<button class="px-4 py-1.5 rounded hover:bg-surface-container text-secondary font-data-label text-data-label transition-colors">Civil</button>
+<button class="px-4 py-1.5 rounded hover:bg-surface-container text-secondary font-data-label text-data-label transition-colors">Publica</button>
+</div>
+<!-- Export Actions -->
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline text-on-surface hover:bg-surface-container rounded transition-colors font-data-label text-data-label uppercase">
+<span class="material-symbols-outlined text-sm">csv</span>
+                    Exportar Datos (CSV)
+                </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary-container text-white rounded hover:bg-primary transition-colors font-data-label text-data-label uppercase">
+<span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                    Exportar Informe Formal
+                </button>
+</div>
+</div>
+<!-- 12-Column Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Left Panel: Concertina Budget Table (Span 8) -->
+<div class="col-span-12 xl:col-span-8 flex flex-col gap-base">
+<div class="bg-white border border-outline-variant rounded shadow-[0_4px_20px_rgba(26,43,68,0.05)] overflow-hidden">
+<!-- Table Header -->
+<div class="grid grid-cols-[auto_1fr_100px_100px_120px] gap-4 p-4 bg-surface-container-low border-b border-outline-variant font-data-label text-data-label text-secondary uppercase items-center">
+<div class="w-6"></div>
+<div>Ítem / Descripción</div>
+<div class="text-right">Unidad</div>
+<div class="text-right">Cantidad</div>
+<div class="text-right">Valor Total</div>
+</div>
+<!-- Row 1: Collapsed -->
+<div class="border-b border-outline-variant last:border-0">
+<div class="grid grid-cols-[auto_1fr_100px_100px_120px] gap-4 p-4 items-center hover:bg-surface-container-lowest cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-secondary group-hover:text-primary-container transition-colors">keyboard_arrow_right</span>
+<div class="font-h3 text-body-md font-semibold text-primary-container">1.0 Preliminares y Movimiento de Tierras</div>
+<div class="text-right font-body-md text-secondary">GLB</div>
+<div class="text-right font-body-md text-secondary">1.00</div>
+<div class="text-right font-body-md font-semibold text-primary-container">$45,200.00</div>
+</div>
+</div>
+<!-- Row 2: Expanded -->
+<div class="border-b border-outline-variant last:border-0 bg-surface-container-lowest">
+<!-- Parent Row -->
+<div class="grid grid-cols-[auto_1fr_100px_100px_120px] gap-4 p-4 items-center bg-surface-container-low border-l-4 border-primary-container">
+<span class="material-symbols-outlined text-primary-container">keyboard_arrow_down</span>
+<div class="font-h3 text-body-md font-semibold text-primary-container">2.0 Cimentación Estructural</div>
+<div class="text-right font-body-md text-secondary">M3</div>
+<div class="text-right font-body-md text-secondary">150.00</div>
+<div class="text-right font-body-md font-semibold text-primary-container">$125,000.00</div>
+</div>
+<!-- Expanded Content (APU Details) -->
+<div class="p-6 pt-4 pl-14 bg-white border-t border-outline-variant border-dashed">
+<h4 class="font-data-label text-data-label text-primary-container mb-4 uppercase tracking-wider">Desglose APU (Análisis de Precio Unitario)</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Breakdown Table -->
+<div class="col-span-2">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b-2 border-outline-variant font-data-label text-caption text-secondary uppercase">
+<th class="py-2 font-normal">Recurso</th>
+<th class="py-2 font-normal">Tipo</th>
+<th class="py-2 font-normal text-right">Rend.</th>
+<th class="py-2 font-normal text-right">Precio Unitario ($)</th>
+<th class="py-2 font-normal text-right">Subtotal</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-[13px]">
+<tr class="border-b border-surface-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-data-tight text-primary-container">Concreto premezclado f'c=250 kg/cm2</td>
+<td class="py-data-tight text-secondary">Material</td>
+<td class="py-data-tight text-right text-secondary">1.05</td>
+<td class="py-data-tight text-right">
+<input class="w-20 text-right text-[13px] py-1 px-2 border border-outline-variant rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container bg-surface-container-lowest" type="text" value="120.00"/>
+</td>
+<td class="py-data-tight text-right font-medium text-primary-container">$126.00</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-data-tight text-primary-container">Acero de refuerzo fy=4200 kg/cm2</td>
+<td class="py-data-tight text-secondary">Material</td>
+<td class="py-data-tight text-right text-secondary">120.00</td>
+<td class="py-data-tight text-right">
+<input class="w-20 text-right text-[13px] py-1 px-2 border border-outline-variant rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container bg-surface-container-lowest" type="text" value="1.15"/>
+</td>
+<td class="py-data-tight text-right font-medium text-primary-container">$138.00</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-data-tight text-primary-container">Cuadrilla Cimentación (1 Of + 3 Ay)</td>
+<td class="py-data-tight text-secondary">Labor</td>
+<td class="py-data-tight text-right text-secondary">0.80</td>
+<td class="py-data-tight text-right">
+<input class="w-20 text-right text-[13px] py-1 px-2 border border-outline-variant rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container bg-surface-container-lowest" type="text" value="45.00"/>
+</td>
+<td class="py-data-tight text-right font-medium text-primary-container">$36.00</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="py-data-tight text-primary-container">Herramienta Menor (5% MO)</td>
+<td class="py-data-tight text-secondary">Indirect</td>
+<td class="py-data-tight text-right text-secondary">0.05</td>
+<td class="py-data-tight text-right text-secondary">36.00</td>
+<td class="py-data-tight text-right font-medium text-primary-container">$1.80</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- APU Factor Summary inside Row -->
+<div class="col-span-2 bg-surface p-4 border border-outline-variant rounded flex justify-between items-center mt-2">
+<div class="flex gap-6">
+<div>
+<div class="font-data-label text-[11px] text-secondary uppercase mb-1">Costo Directo Unit.</div>
+<div class="font-h3 text-[18px] text-primary-container">$301.80</div>
+</div>
+<div>
+<div class="font-data-label text-[11px] text-secondary uppercase mb-1">Factor APU (AIU 25%)</div>
+<div class="font-h3 text-[18px] text-primary-container">$75.45</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-data-label text-caption text-secondary uppercase mb-1">Precio Unitario Total</div>
+<div class="font-h2 text-h3 text-on-tertiary-fixed-variant bg-tertiary-fixed-dim px-3 py-1 rounded shadow-sm inline-block">$377.25</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 3: Collapsed -->
+<div class="border-b border-outline-variant last:border-0">
+<div class="grid grid-cols-[auto_1fr_100px_100px_120px] gap-4 p-4 items-center hover:bg-surface-container-lowest cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-secondary group-hover:text-primary-container transition-colors">keyboard_arrow_right</span>
+<div class="font-h3 text-body-md font-semibold text-primary-container">3.0 Estructura Metálica</div>
+<div class="text-right font-body-md text-secondary">KG</div>
+<div class="text-right font-body-md text-secondary">4,500.00</div>
+<div class="text-right font-body-md font-semibold text-primary-container">$85,500.00</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel: Calculation Engine (Span 4) -->
+<div class="col-span-12 xl:col-span-4 flex flex-col gap-base sticky top-24">
+<h3 class="font-h3 text-h3 text-primary-container mb-2">Motor de Cálculo (AIU)</h3>
+<!-- Direct Costs -->
+<div class="bg-white border border-outline-variant rounded shadow-[0_4px_20px_rgba(26,43,68,0.05)] p-5 relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1 h-full bg-secondary"></div>
+<div class="font-data-label text-data-label text-secondary uppercase tracking-widest mb-2">Costos Directos Totales</div>
+<div class="font-h1 text-[36px] text-primary-container tracking-tight">$255,700.00</div>
+<div class="mt-4 pt-4 border-t border-surface-variant flex justify-between font-body-md text-[13px]">
+<span class="text-secondary">Materiales (60%)</span>
+<span class="text-primary-container font-medium">$153,420.00</span>
+</div>
+<div class="mt-1 flex justify-between font-body-md text-[13px]">
+<span class="text-secondary">Mano de Obra (30%)</span>
+<span class="text-primary-container font-medium">$76,710.00</span>
+</div>
+<div class="mt-1 flex justify-between font-body-md text-[13px]">
+<span class="text-secondary">Equipos (10%)</span>
+<span class="text-primary-container font-medium">$25,570.00</span>
+</div>
+</div>
+<!-- Indirect Costs -->
+<div class="bg-white border border-outline-variant rounded shadow-[0_4px_20px_rgba(26,43,68,0.05)] p-5 relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1 h-full bg-outline"></div>
+<div class="flex justify-between items-center mb-2">
+<div class="font-data-label text-data-label text-secondary uppercase tracking-widest">Costos Indirectos (AIU)</div>
+<span class="px-2 py-0.5 bg-surface-container rounded text-[11px] font-data-label text-primary-container">25% Modificable</span>
+</div>
+<div class="font-h2 text-[28px] text-primary-container tracking-tight">$63,925.00</div>
+<div class="mt-4 space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-data-label text-[12px] text-secondary">Administración (12%)</label>
+<input class="w-24 text-right text-[13px] py-1 px-2 border border-outline-variant rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container text-primary-container bg-surface-container-lowest" type="text" value="30,684.00"/>
+</div>
+<div class="flex items-center justify-between">
+<label class="font-data-label text-[12px] text-secondary">Imprevistos (5%)</label>
+<input class="w-24 text-right text-[13px] py-1 px-2 border border-outline-variant rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container text-primary-container bg-surface-container-lowest" type="text" value="12,785.00"/>
+</div>
+<div class="flex items-center justify-between">
+<label class="font-data-label text-[12px] text-secondary">Utilidad (8%)</label>
+<input class="w-24 text-right text-[13px] py-1 px-2 border border-outline-variant rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container text-primary-container bg-surface-container-lowest" type="text" value="20,456.00"/>
+</div>
+</div>
+</div>
+<!-- Total Budget Highlight -->
+<div class="bg-tertiary-fixed-dim border border-[#d6a951] rounded shadow-[0_4px_20px_rgba(26,43,68,0.1)] p-6 mt-2 relative overflow-hidden">
+<div class="absolute -right-4 -top-4 opacity-10">
+<span class="material-symbols-outlined text-[120px] icon-fill">account_balance</span>
+</div>
+<div class="relative z-10">
+<div class="font-data-label text-[13px] text-on-tertiary-fixed-variant uppercase tracking-widest mb-1">Presupuesto Total Estimado</div>
+<div class="font-h1 text-[42px] text-on-tertiary-fixed-variant tracking-tighter leading-none">$319,625.00</div>
+<div class="mt-4 font-body-md text-[13px] text-[#5d4201] opacity-80 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">info</span>
+                            Valores actualizados a fecha de corte.
+                        </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom padding for scroll -->
+<div class="h-16"></div>
+</main>
+</body></html>

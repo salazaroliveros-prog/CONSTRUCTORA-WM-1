@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html class="light dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CONSTRUCTORA WM/M&amp;S - Tablero de Control Principal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=Work+Sans:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-primary": "#20314a", primary: "#b6c7e7", background: "#111415", "error-container": "#93000a", "outline-variant": "#44474d", error: "#ffb4ab", outline: "#8e9098", "on-secondary-fixed": "#121c29", "surface-container": "#1d2021", "on-tertiary-container": "#af8c47", "surface-container-high": "#282a2b", "primary-fixed": "#d5e3ff", tertiary: "#e9c176", "on-primary-fixed-variant": "#374762", "surface-container-low": "#191c1d", "on-surface-variant": "#c5c6ce", "on-error-container": "#ffdad6", "surface-bright": "#373a3b", "secondary-fixed": "#d9e3f5", "on-surface": "#e1e3e4", "surface-container-highest": "#323536", "tertiary-fixed-dim": "#e9c176", "on-tertiary-fixed-variant": "#5d4201", surface: "#111415", "secondary-fixed-dim": "#bdc7d9", "on-error": "#690005", "inverse-on-surface": "#2e3132", "on-secondary-fixed-variant": "#3e4756", "on-primary-fixed": "#091c34", "tertiary-fixed": "#ffdea5", "on-primary-container": "#8292b0", "inverse-primary": "#4f5f7b", "tertiary-container": "#392700", secondary: "#bdc7d9", "surface-dim": "#111415", "secondary-container": "#3e4756", "on-secondary-container": "#acb6c7", "primary-container": "#1a2b44", "surface-variant": "#323536", "on-background": "#e1e3e4", "on-secondary": "#27313f", "surface-container-lowest": "#0c0f10", "on-tertiary-fixed": "#261900", "inverse-surface": "#e1e3e4", "surface-tint": "#b6c7e7", "primary-fixed-dim": "#b6c7e7", "on-tertiary": "#412d00"}, borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"}, spacing: {"section-gap": "64px", "data-tight": "4px", gutter: "16px", base: "8px", "container-padding": "32px", margin: "24px", xs: "4px", xl: "48px", lg: "24px", sm: "8px", md: "16px"}, fontFamily: {h1: ["Inter"], caption: ["Inter"], "body-md": ["Inter"], "data-label": ["Work Sans"], "body-lg": ["Inter"], h3: ["Inter"], h2: ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Work Sans"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "label-md": ["Work Sans"]}, fontSize: {h1: ["40px", {lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700"}], caption: ["12px", {lineHeight: "1.4", fontWeight: "500"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "data-label": ["14px", {lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}], h3: ["24px", {lineHeight: "1.4", letterSpacing: "0", fontWeight: "600"}], h2: ["32px", {lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-md": ["24px", {lineHeight: "1.3", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "1.2", fontWeight: "700"}], "label-md": ["14px", {lineHeight: "1.4", letterSpacing: "0.02em", fontWeight: "500"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .elevation-flat { box-shadow: none; }
+        .elevation-raised { box-shadow: 0px 4px 20px rgba(26, 43, 68, 0.05); }
+        .elevation-overlay { box-shadow: 0px 10px 30px rgba(26, 43, 68, 0.1); }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c5c6ce; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #75777e; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-72 border-r bg-white dark:bg-slate-900 text-[#1A2B44] dark:text-slate-100 font-inter font-medium text-xs uppercase tracking-widest border-r border-slate-200 dark:border-slate-800 flex flex-col h-full py-6 z-50">
+<div class="px-6 mb-8 flex items-center gap-4">
+<img alt="Architect Profile" class="w-12 h-12 rounded-full object-cover border-2 border-outline-variant" data-alt="Professional headshot of a mature male lead architect in a modern office with natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmOJqpLEuN1OJb5ijjIkQwxn-a4gjESy4j2mBVtHt6oJd8WwaYQTAiKwTn4VOuDH8h2ggKcmjfng5W3NCRViYiMZ9LCM6MG25Nuc6xWHzUhTiGlljCL_57GOdL2kue-08-ueHsnMRNTXKsLzyZZc4OsVDY4D9U7KKUKHf2zeuCBq_Qvap6WRxxOIxOhC-DMSKlsdhGXtzxLIkGwn7u6bbgTNQN91Hk88L6pCfA6g3wkgiUr8rirCt2HT0XgO0ntlJ7hhoO4SCoIJeF"/>
+<div>
+<h2 class="text-lg font-bold text-[#1A2B44] dark:text-white">WM/M&amp;S Portal</h2>
+<p class="text-[10px] text-outline mt-1 font-caption">Edificando el Futuro</p>
+</div>
+</div>
+<div class="flex-1 px-4 space-y-2 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#1A2B44] dark:text-blue-400 border-l-4 border-[#1A2B44] hover:text-slate-900 dark:hover:text-white transition-all ease-in-out duration-150" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-all ease-in-out duration-150 border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">architecture</span>
+                Project Pipeline
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-all ease-in-out duration-150 border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+                Timeline
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-all ease-in-out duration-150 border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">insert_chart</span>
+                Analytics
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-all ease-in-out duration-150 border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</div>
+<div class="px-6 mt-auto pt-6 border-t border-slate-200">
+<button class="w-full bg-primary text-on-primary py-3 rounded DEFAULT font-data-label text-data-label flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Project
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-72 flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-inter tracking-tight text-sm docked full-width top-0 z-40 border-b-4 border-[#1A2B44] dark:border-slate-700 shadow-sm flex justify-between items-center w-full px-8 py-4 shrink-0">
+<div class="flex items-center gap-6">
+<!-- Brand Logo (Placeholder representation) -->
+<div class="flex items-center gap-2">
+<img alt="WM/M&amp;S Corporate Logo" class="h-8" data-alt="Geometric minimalist construction company logo in navy blue and silver with bold clean lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMC8EAyHVm8FELp_AurZ_0gt_P1GuRxNPpcBuq18_8HsD59AjB0D4YOUNTlZzRpckSUYRjlw5msoyKXFEhFPICPtwck3-49gOayVTJNXKcuO29nd169UnoL8Mw4cRoVgtZfypm8TNNRutyLPLsyr3Y-xpYSesJA1k9__JAch6PLo_JJ_d2uEG-jlX6hMUGUWNBhpi_C--QS7F5nSiRb4rKB_oEdgtXuSD3Cs4zuJyD6wj2OB0brkm2ZWc8PQm2i8Si8bCum4bQRdYi"/>
+<span class="text-xl font-black tracking-tighter text-[#1A2B44] dark:text-slate-100">CONSTRUCTORA WM/M&amp;S</span>
+</div>
+<!-- Quick Project Filter -->
+<div class="hidden lg:flex items-center ml-8 bg-surface-container-low border border-outline-variant rounded lg px-3 py-1.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-outline text-sm mr-2">domain</span>
+<select class="bg-transparent border-none text-sm font-data-label text-on-surface focus:ring-0 py-0 pl-0 pr-6 appearance-none cursor-pointer">
+<option>Torre Horizonte (Activo)</option>
+<option>Complejo Vista (Planificación)</option>
+<option>Centro Logístico Sur (Fase Final)</option>
+</select>
+<span class="material-symbols-outlined text-outline text-sm absolute right-12 pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center text-outline mr-4 gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-data-label text-data-label">14:30 EST</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-full cursor-pointer active:scale-95 duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-full cursor-pointer active:scale-95 duration-200">
+<span class="material-symbols-outlined">apps</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<main class="flex-1 overflow-y-auto bg-surface p-container-padding">
+<div class="max-w-[1600px] mx-auto space-y-gutter">
+<!-- Header / Quick Stats -->
+<div class="flex justify-between items-end mb-8 border-b-2 border-outline-variant pb-4">
+<div>
+<h1 class="font-h2 text-h2 text-primary">Vista General del Proyecto</h1>
+<p class="font-body-md text-body-md text-secondary mt-1">Torre Horizonte - Fase Estructural Activa</p>
+</div>
+<div class="flex gap-4">
+<button class="px-4 py-2 bg-transparent border border-outline text-on-surface font-data-label text-data-label rounded DEFAULT hover:bg-surface-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span>
+                            Reporte Ejecutivo
+                        </button>
+</div>
+</div>
+<!-- KPI Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- KPI 1: Días Restantes -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded lg p-6 elevation-raised hover:elevation-overlay transition-shadow">
+<div class="flex justify-between items-start mb-4">
+<span class="font-data-label text-data-label text-secondary uppercase">Días Restantes (Fase)</span>
+<span class="material-symbols-outlined text-primary">hourglass_top</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-h1 text-h1 text-primary">45</span>
+<span class="font-body-md text-body-md text-outline mb-1">/ 120 días</span>
+</div>
+<div class="mt-4 w-full bg-surface-container-highest rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 62.5%"></div>
+</div>
+<p class="font-caption text-caption text-on-tertiary-container mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                            En tiempo según cronograma APU
+                        </p>
+</div>
+<!-- KPI 2: Hitos Próximos -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded lg p-6 elevation-raised hover:elevation-overlay transition-shadow">
+<div class="flex justify-between items-start mb-4">
+<span class="font-data-label text-data-label text-secondary uppercase">Hitos Próximos</span>
+<span class="material-symbols-outlined text-primary">flag</span>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<div class="flex-1">
+<p class="font-caption text-caption text-on-surface font-semibold">Vaciado Losa Nivel 5</p>
+<p class="font-caption text-[10px] text-outline">En 3 días (Oct 15)</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></div>
+<div class="flex-1">
+<p class="font-caption text-caption text-on-surface font-semibold">Revisión Acero Vigas</p>
+<p class="font-caption text-[10px] text-outline">En 7 días (Oct 19)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- KPI 3: Presupuesto Ejecutado -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded lg p-6 elevation-raised hover:elevation-overlay transition-shadow lg:col-span-2 flex flex-col justify-between relative overflow-hidden">
+<!-- Background Accent -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-fixed opacity-20 rounded-bl-full -mr-10 -mt-10"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="font-data-label text-data-label text-secondary uppercase">Presupuesto Ejecutado (APU)</span>
+<span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+</div>
+<div class="relative z-10 mt-4 flex items-end justify-between">
+<div>
+<span class="font-h1 text-h1 text-primary">$2.4M</span>
+<p class="font-body-md text-body-md text-outline mt-1">de $5.8M Presupuestado</p>
+</div>
+<div class="bg-tertiary-fixed text-on-tertiary-fixed font-data-label text-data-label px-3 py-1 rounded DEFAULT">
+                                41.3% Consumido
+                            </div>
+</div>
+</div>
+</div>
+<!-- Main Section: Calendar & APU Sync -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter mt-section-gap">
+<!-- Interactive Calendar (Takes 8 cols) -->
+<div class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded lg flex flex-col elevation-raised">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-bright rounded-t lg">
+<h3 class="font-h3 text-h3 text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+                                Cronograma de Duración (Sincronizado APU)
+                            </h3>
+<div class="flex gap-2">
+<button class="p-1 hover:bg-surface-container rounded transition-colors"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<span class="font-data-label text-data-label px-2 py-1">Octubre 2023</span>
+<button class="p-1 hover:bg-surface-container rounded transition-colors"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+<div class="p-6 flex-1 overflow-x-auto">
+<!-- Minimalist Gantt/Calendar Representation -->
+<div class="min-w-[600px]">
+<!-- Headers -->
+<div class="grid grid-cols-7 gap-1 mb-2">
+<div class="font-caption text-caption text-outline text-center">Lun</div>
+<div class="font-caption text-caption text-outline text-center">Mar</div>
+<div class="font-caption text-caption text-outline text-center">Mié</div>
+<div class="font-caption text-caption text-outline text-center">Jue</div>
+<div class="font-caption text-caption text-outline text-center">Vie</div>
+<div class="font-caption text-caption text-outline text-center">Sáb</div>
+<div class="font-caption text-caption text-outline text-center">Dom</div>
+</div>
+<!-- Days Grid (Simplified Week View showing APU events) -->
+<div class="grid grid-cols-7 gap-1 auto-rows-fr h-[300px]">
+<!-- Day Cells -->
+<div class="border border-outline-variant/30 rounded p-1 bg-surface-bright relative">
+<span class="font-caption text-caption text-outline absolute top-1 right-2">9</span>
+</div>
+<div class="border border-outline-variant/30 rounded p-1 bg-surface-bright relative">
+<span class="font-caption text-caption text-outline absolute top-1 right-2">10</span>
+<div class="mt-5 w-full bg-primary-fixed/50 border-l-2 border-primary rounded-r text-[10px] p-1 font-caption truncate text-on-surface" title="Preparación Encofrado (APU: Est-04)">
+                                            Prep. Encofrado
+                                        </div>
+</div>
+<div class="border border-outline-variant/30 rounded p-1 bg-surface-bright relative">
+<span class="font-caption text-caption text-outline absolute top-1 right-2">11</span>
+<div class="mt-5 w-full bg-primary-fixed/50 border-l-2 border-primary rounded-r text-[10px] p-1 font-caption truncate text-on-surface">
+                                            Instalación Acero
+                                        </div>
+</div>
+<div class="border border-primary/20 rounded p-1 bg-primary-fixed/10 relative">
+<span class="font-caption text-caption text-primary font-bold absolute top-1 right-2">12</span>
+<!-- Today marker -->
+<div class="absolute top-1 right-2 w-6 h-6 rounded-full bg-primary opacity-10 -z-10 -mr-1 -mt-1"></div>
+<div class="mt-5 w-full bg-primary text-on-primary rounded text-[10px] p-1 font-caption truncate elevation-raised shadow-primary/20">
+                                            Inspección Est.
+                                        </div>
+</div>
+<div class="border border-outline-variant/30 rounded p-1 bg-surface-bright relative">
+<span class="font-caption text-caption text-outline absolute top-1 right-2">13</span>
+<div class="mt-5 w-full bg-error-container text-on-error-container border-l-2 border-error rounded-r text-[10px] p-1 font-caption truncate" title="Hito Crítico: Vaciado Losa Nivel 5 (APU: Con-02)">
+                                            HITO: Vaciado L5
+                                        </div>
+</div>
+<div class="border border-outline-variant/30 rounded p-1 bg-surface-container-low opacity-50 relative">
+<span class="font-caption text-caption text-outline absolute top-1 right-2">14</span>
+</div>
+<div class="border border-outline-variant/30 rounded p-1 bg-surface-container-low opacity-50 relative">
+<span class="font-caption text-caption text-outline absolute top-1 right-2">15</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Access Modules (Takes 4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<!-- APU Detail Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded lg p-6 elevation-raised flex-1">
+<h3 class="font-data-label text-data-label text-on-surface uppercase mb-4 flex items-center gap-2 border-b-2 border-primary pb-2 inline-flex">
+<span class="material-symbols-outlined text-sm">calculate</span>
+                                Detalle APU Activo
+                            </h3>
+<div class="space-y-4">
+<div>
+<p class="font-caption text-caption text-outline uppercase tracking-wider">Fase Actual</p>
+<p class="font-body-md text-body-md font-semibold text-primary">Estructura - Nivel 5</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface p-3 rounded border border-surface-variant">
+<p class="font-caption text-caption text-outline">Duración APU</p>
+<p class="font-data-label text-data-label text-on-surface mt-1">14 Días</p>
+</div>
+<div class="bg-surface p-3 rounded border border-surface-variant">
+<p class="font-caption text-caption text-outline">Rendimiento</p>
+<p class="font-data-label text-data-label text-on-tertiary-container mt-1">85%</p>
+</div>
+</div>
+<button class="w-full bg-transparent border border-primary text-primary py-2 rounded DEFAULT font-data-label text-data-label hover:bg-primary-fixed/20 transition-colors mt-2">
+                                    Ver Análisis Precio Unitario
+                                </button>
+</div>
+</div>
+<!-- Quick Links -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded lg p-6 elevation-raised">
+<h3 class="font-data-label text-data-label text-on-surface uppercase mb-4">Accesos Rápidos</h3>
+<div class="grid grid-cols-2 gap-3">
+<a class="flex flex-col items-center justify-center p-4 rounded bg-surface hover:bg-surface-container border border-transparent hover:border-outline-variant transition-all text-center group" href="#">
+<span class="material-symbols-outlined text-outline group-hover:text-primary mb-2 transition-colors">monitoring</span>
+<span class="font-caption text-caption text-on-surface">Seguimiento</span>
+</a>
+<a class="flex flex-col items-center justify-center p-4 rounded bg-surface hover:bg-surface-container border border-transparent hover:border-outline-variant transition-all text-center group" href="#">
+<span class="material-symbols-outlined text-outline group-hover:text-primary mb-2 transition-colors">receipt_long</span>
+<span class="font-caption text-caption text-on-surface">Gastos</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

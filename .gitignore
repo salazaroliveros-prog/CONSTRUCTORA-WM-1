@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.production
+.vscode/
+.sixth/
+.amazonq/
+.agents/
+Keploy Agent.exe
+myawsagent/

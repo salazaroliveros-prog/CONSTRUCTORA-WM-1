@@ -1,0 +1,12 @@
+{
+  "name": "constructorawm",
+  "version": "1.0.0",
+  "description": "CONSTRUCTORA WM/M&S Platform",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}
