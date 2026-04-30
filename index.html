@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/style.css">
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="/assets/js/env.js"></script>
@@ -19,11 +19,13 @@
     <noscript>Activa JavaScript para utilizar la plataforma CONSTRUCTORA WM/M&amp;S.</noscript>
     <script type="module" src="/assets/js/app.js"></script>
     <script>
+      /* Service Worker temporalmente desactivado para depuración 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW error', err));
         });
       }
+      */
     </script>
 </body>
 </html>

@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Styles */
+:root {
+    --primary-color: #1a2b44;
+    --accent-color: #c9a45c;
+}
+
+body {
+    @apply antialiased text-gray-900;
+    font-family: 'Inter', sans-serif;
+}

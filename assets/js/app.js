@@ -1,8 +1,12 @@
+import '../css/main.css';
+import '../css/style.css';
+import logoUrl from '../../public/src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISEÑO LOGO CONSTRUCTORA WM.png';
+
 (function () {
   "use strict";
 
-  const STITCH_ROOT = "/src/components/stitch";
-  const LOGO_PATH = `${STITCH_ROOT}/modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISE%C3%91O%20LOGO%20CONSTRUCTORA%20WM.png`;
+  const STITCH_ROOT = window.location.origin + "/src/components/stitch";
+  const LOGO_PATH = logoUrl;
   const DEFAULT_ROUTE = "login";
   const AFTER_LOGIN_ROUTE = "dashboard";
 
@@ -119,6 +123,28 @@
 
     iframe.src = route.path;
     title.textContent = route.label;
+
+    iframe.onload = () => {
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      if (!iframeDoc) return;
+
+      const styles = document.querySelectorAll('link[rel="stylesheet"], style');
+      styles.forEach(style => {
+        const clone = style.cloneNode(true);
+        if (clone.tagName === 'LINK' && clone.href) {
+          const url = new URL(clone.href);
+          clone.href = url.href;
+        }
+        iframeDoc.head.appendChild(clone);
+      });
+
+      const cdnScript = iframeDoc.querySelector('script[src*="tailwindcss.com"]');
+      if (cdnScript) cdnScript.remove();
+
+      syncDarkModeToIframe();
+      if (loader) loader.classList.remove("active");
+      iframe.classList.remove("loading");
+    };
 
     Array.from(nav.querySelectorAll("button[data-route]")).forEach((button) => {
       const active = button.dataset.route === route.id;
