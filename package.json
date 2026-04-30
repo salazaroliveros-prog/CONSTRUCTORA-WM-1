@@ -1,6 +1,7 @@
 {
   "name": "constructorawm",
   "version": "1.0.0",
+  "type": "module",
   "description": "CONSTRUCTORA WM/M&S Platform",
   "scripts": {
     "dev": "vite",
@@ -8,6 +9,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^8.0.10"
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^6.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.7"
   }
 }
