@@ -1,9 +1,9 @@
 window.CONSTRUCTORA_WM_CONFIG = {
   "appEnv": "production",
-  "appUrl": "https://vercel.com/proyectoswm/constru-wm-mys-fina-app",
+  "appUrl": "https://constructora-wm-1.vercel.app/",
   "supabaseUrl": "https://slbzwylbnzzarrxejpql.supabase.co",
   "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsYnp3eWxibnp6YXJyeGVqcHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MzI5MDMsImV4cCI6MjA4MjQwODkwM30.rSfHLPdDWp9KOHJth99FxsMMAYXehAr7fOOlTuza-G4",
-  "authRedirectUrl": "https://vercel.com/proyectoswm/constru-wm-mys-fina-app",
+  "authRedirectUrl": "https://constructora-wm-1.vercel.app/",
   "currency": "GTQ",
   "currencySymbol": "Q",
   "locale": "es-GT",
