@@ -1,10 +1,11 @@
 const CACHE_NAME = 'wm-cache-v1';
 const urlsToCache = [
-  './',
-  './index.html',
-  './assets/css/style.css',
-  './assets/js/app.js',
-  './assets/js/env.js'
+  '/',
+  '/index.html',
+  '/assets/css/style.css',
+  '/assets/css/tailwind.generated.css',
+  '/assets/js/app.js',
+  '/assets/js/env.js'
 ];
 
 self.addEventListener('install', event => {

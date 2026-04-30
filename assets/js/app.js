@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const STITCH_ROOT = "src/components/stitch";
+  const STITCH_ROOT = "/src/components/stitch";
   const LOGO_PATH = `${STITCH_ROOT}/modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISE%C3%91O%20LOGO%20CONSTRUCTORA%20WM.png`;
   const DEFAULT_ROUTE = "login";
   const AFTER_LOGIN_ROUTE = "dashboard";
