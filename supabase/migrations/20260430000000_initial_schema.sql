@@ -1,6 +1,8 @@
 -- Supabase Initial Schema for CONSTRUCTORA WM/M&S Platform
 -- Idempotent version: safe to run multiple times (uses IF NOT EXISTS throughout)
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- ENUMS (safe to re-run)
 DO $$ BEGIN
     CREATE TYPE project_typology AS ENUM ('Residential', 'Commercial', 'Industrial', 'Civil', 'Public');

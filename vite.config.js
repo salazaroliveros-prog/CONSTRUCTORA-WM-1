@@ -3,6 +3,14 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: './',
   base: '/',
+  css: {
+    // Disable PostCSS auto-detection of tailwindcss.
+    // CSS files (main.css, style.css) are plain CSS.
+    // Tailwind is loaded via CDN in each module's <head> (handled by patchFrame in app.js).
+    postcss: {
+      plugins: [],
+    },
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
