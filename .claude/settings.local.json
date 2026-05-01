@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "ask": [
+      "seleccion automatica de agentes disponibles, cli, mcp, autocontexto"
+    ]
+  }
+}
