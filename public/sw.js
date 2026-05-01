@@ -12,10 +12,10 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        // Use addAll for essential files
-        return cache.addAll(urlsToCache).catch(err => {
-          console.warn('Essential files failed to cache:', err);
-        });
+        // Use a more robust caching strategy: cache one by one to avoid total failure
+        return Promise.allSettled(
+          urlsToCache.map(url => cache.add(url).catch(err => console.warn(`Failed to cache ${url}:`, err)))
+        );
       })
   );
   self.skipWaiting();

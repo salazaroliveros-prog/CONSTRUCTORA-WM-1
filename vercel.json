@@ -6,5 +6,11 @@
       "source": "/((?!assets/|src/|public/|.*\\..*$).*)",
       "destination": "/index.html"
     }
+  ],
+  "routes": [
+    {
+      "src": "/((?!api/|assets/|src/|public/|.*\\..*$).*)",
+      "dest": "/"
+    }
   ]
 }

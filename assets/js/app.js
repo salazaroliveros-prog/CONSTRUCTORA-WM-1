@@ -1,14 +1,14 @@
 import '../css/main.css';
 import '../css/style.css';
-import logoUrl from '../../public/src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISEÑO LOGO CONSTRUCTORA WM.png';
+// Fixed logo path to use direct public path to avoid Vite asset hashing issues
+// Use root-relative paths for all assets to ensure consistency across environments
+const STITCH_ROOT = "/src/components/stitch";
+const LOGO_PATH = "/src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/logo-wm.png";
+const DEFAULT_ROUTE = "login";
+const AFTER_LOGIN_ROUTE = "dashboard";
 
 (function () {
   "use strict";
-
-  const STITCH_ROOT = window.location.origin + "/src/components/stitch";
-  const LOGO_PATH = logoUrl;
-  const DEFAULT_ROUTE = "login";
-  const AFTER_LOGIN_ROUTE = "dashboard";
 
   const routes = [
     { id: "login", label: "Acceso", icon: "login", path: `${STITCH_ROOT}/acceso_al_sistema_constructora_wm_m_s_2/code.html`, public: true },
@@ -62,7 +62,12 @@ import logoUrl from '../../public/src/components/stitch/modern_minimalist_logo_f
   }
 
   function currentRouteId() {
-    return normalizeRoute(window.location.hash);
+    const hash = window.location.hash;
+    // Special handling for Supabase auth fragments (e.g. #access_token=...)
+    if (hash.includes('access_token=') || hash.includes('type=recovery') || hash.includes('error=')) {
+      return AFTER_LOGIN_ROUTE;
+    }
+    return normalizeRoute(hash);
   }
 
   function toggleDarkMode() {
@@ -566,7 +571,8 @@ import logoUrl from '../../public/src/components/stitch/modern_minimalist_logo_f
   }
 
   function normalizeLogo(doc) {
-    const logoSrc = new URL(LOGO_PATH, window.location.href).href;
+    // Ensure the logo source is always a fresh root-relative URL
+    const logoSrc = LOGO_PATH + '?v=' + Date.now();
     Array.from(doc.querySelectorAll("img")).forEach((img) => {
       const label = `${img.alt || ""} ${img.getAttribute("data-alt") || ""}`.toLowerCase();
       if (!label.includes("logo") && !label.includes("constructora wm")) return;
@@ -922,12 +928,38 @@ import logoUrl from '../../public/src/components/stitch/modern_minimalist_logo_f
     showFrameToast.timer = window.setTimeout(() => toast.remove(), 3500);
   }
 
-  function init() {
+  async function init() {
     if (localStorage.getItem("wm-theme") === "dark") {
       document.body.classList.add("dark-mode");
     }
     buildShell();
     iframe.addEventListener("load", patchFrame);
+    
+    // Auth State Listener
+    const client = getSupabase();
+    if (client) {
+      client.auth.onAuthStateChange((event, session) => {
+        console.log("Auth event:", event, "Session:", !!session);
+        if (session && currentRouteId() === "login") {
+          navigate(AFTER_LOGIN_ROUTE);
+        } else if (!session && currentRouteId() !== "login" && currentRouteId() !== "legacy-login") {
+          // Do not redirect to login if we are in the middle of processing an OAuth callback
+          if (window.location.hash.includes('access_token=')) {
+            console.log("OAuth callback detected, skipping login redirect");
+            return;
+          }
+          navigate("login");
+        }
+      });
+
+      // Initial Session Check
+      const { data: { session } } = await client.auth.getSession();
+      if (session && (currentRouteId() === "login" || currentRouteId() === "legacy-login")) {
+        navigate(AFTER_LOGIN_ROUTE);
+        return;
+      }
+    }
+
     window.addEventListener("hashchange", () => renderRoute(currentRouteId()));
     navigate(currentRouteId());
   }

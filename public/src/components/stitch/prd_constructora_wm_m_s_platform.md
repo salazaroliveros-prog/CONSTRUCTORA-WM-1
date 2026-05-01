@@ -50,7 +50,7 @@
 *   **Responsiveness:** Full desktop experience for office engineering and optimized mobile view for site supervisors.
 *   **Language:** All production UI text must be Spanish.
 *   **Currency:** All financial values must use Guatemalan quetzal format (`Q 0.00`).
-*   **Logo:** Every branded screen must use the PNG logo stored in `modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISEÑO LOGO CONSTRUCTORA WM.png`.
+*   **Logo:** Every branded screen must use the PNG logo stored in `modern_minimalist_logo_for_an_architecture_and_construction_company_named/logo-wm.png`.
 *   **Unified Shell:** Screens are mounted by the root app shell (`index.html` + `assets/js/app.js`) so navigation, language normalization, currency normalization, logo replacement, and common actions stay consistent.
 
 ---

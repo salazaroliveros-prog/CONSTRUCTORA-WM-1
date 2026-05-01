@@ -9,12 +9,12 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "./src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISE%C3%91O%20LOGO%20CONSTRUCTORA%20WM.png",
+      "src": "./src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/logo-wm.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "./src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/REDISE%C3%91O%20LOGO%20CONSTRUCTORA%20WM.png",
+      "src": "./src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/logo-wm.png",
       "sizes": "512x512",
       "type": "image/png"
     }
