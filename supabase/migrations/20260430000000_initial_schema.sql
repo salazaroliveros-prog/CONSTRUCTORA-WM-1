@@ -1,14 +1,29 @@
 -- Supabase Initial Schema for CONSTRUCTORA WM/M&S Platform
+-- Idempotent version: safe to run multiple times (uses IF NOT EXISTS throughout)
 
--- ENUMS
-CREATE TYPE project_typology AS ENUM ('Residential', 'Commercial', 'Industrial', 'Civil', 'Public');
-CREATE TYPE project_status AS ENUM ('Planning', 'Active', 'Delayed', 'Completed', 'On Hold');
-CREATE TYPE apu_type AS ENUM ('Material', 'Labor', 'Equipment');
-CREATE TYPE expense_category AS ENUM ('Materials', 'Labor', 'Equipment', 'Health', 'Education', 'Savings', 'Entertainment', 'Other');
-CREATE TYPE alert_type AS ENUM ('Info', 'Warning', 'Critical');
+-- ENUMS (safe to re-run)
+DO $$ BEGIN
+    CREATE TYPE project_typology AS ENUM ('Residential', 'Commercial', 'Industrial', 'Civil', 'Public');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE TYPE project_status AS ENUM ('Planning', 'Active', 'Delayed', 'Completed', 'On Hold');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE TYPE apu_type AS ENUM ('Material', 'Labor', 'Equipment');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE TYPE expense_category AS ENUM ('Materials', 'Labor', 'Equipment', 'Health', 'Education', 'Savings', 'Entertainment', 'Other');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE TYPE alert_type AS ENUM ('Info', 'Warning', 'Critical');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- PROFILES
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
     id UUID REFERENCES auth.users(id) PRIMARY KEY,
     full_name TEXT,
     role TEXT DEFAULT 'staff',
@@ -16,7 +31,7 @@ CREATE TABLE profiles (
 );
 
 -- CLIENTS
-CREATE TABLE clients (
+CREATE TABLE IF NOT EXISTS clients (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT,
@@ -27,7 +42,7 @@ CREATE TABLE clients (
 );
 
 -- PROJECTS
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
@@ -42,7 +57,7 @@ CREATE TABLE projects (
 );
 
 -- APUS (Unit Price Analysis Rows)
-CREATE TABLE apus (
+CREATE TABLE IF NOT EXISTS apus (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
     phase TEXT NOT NULL,
@@ -55,7 +70,7 @@ CREATE TABLE apus (
 );
 
 -- APU DETAILS (Materials, Labor, Equipment breakdown)
-CREATE TABLE apu_details (
+CREATE TABLE IF NOT EXISTS apu_details (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     apu_id UUID REFERENCES apus(id) ON DELETE CASCADE,
     type apu_type NOT NULL,
@@ -69,7 +84,7 @@ CREATE TABLE apu_details (
 );
 
 -- EXPENSES (Operational & Personal)
-CREATE TABLE expenses (
+CREATE TABLE IF NOT EXISTS expenses (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     project_id UUID REFERENCES projects(id) ON DELETE CASCADE, -- NULL means personal/company expense
     category expense_category NOT NULL,
@@ -80,7 +95,7 @@ CREATE TABLE expenses (
 );
 
 -- ALERTS
-CREATE TABLE alerts (
+CREATE TABLE IF NOT EXISTS alerts (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -99,15 +114,34 @@ ALTER TABLE apu_details ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
 
--- Creating basic policies (assuming authenticated users can read/write everything for their org for now)
--- In a real scenario, this would be scoped to user orgs or ownership
-CREATE POLICY "Enable read access for all authenticated users" ON profiles FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Enable all access for authenticated users" ON clients FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Enable all access for authenticated users" ON projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Enable all access for authenticated users" ON apus FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Enable all access for authenticated users" ON apu_details FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Enable all access for authenticated users" ON expenses FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Enable all access for authenticated users" ON alerts FOR ALL TO authenticated USING (true) WITH CHECK (true);
+-- Policies (safe to re-run)
+DO $$ BEGIN
+    CREATE POLICY "Enable read access for all authenticated users" ON profiles FOR SELECT TO authenticated USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Enable all access for authenticated users" ON clients FOR ALL TO authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Enable all access for authenticated users" ON projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Enable all access for authenticated users" ON apus FOR ALL TO authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Enable all access for authenticated users" ON apu_details FOR ALL TO authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Enable all access for authenticated users" ON expenses FOR ALL TO authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Enable all access for authenticated users" ON alerts FOR ALL TO authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- TRIGGERS
 -- Auto-update updated_at on projects
@@ -119,6 +153,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_projects_updated_at ON projects;
 CREATE TRIGGER update_projects_updated_at
     BEFORE UPDATE ON projects
     FOR EACH ROW
