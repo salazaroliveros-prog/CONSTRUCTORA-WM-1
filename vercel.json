@@ -1,16 +1,13 @@
 {
   "version": 2,
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/((?!assets/|src/|public/|.*\\..*$).*)",
-      "destination": "/index.html"
-    }
-  ],
+  "buildCommand": "npx vite build",
+  "outputDirectory": "dist",
   "routes": [
-    {
-      "src": "/((?!api/|assets/|src/|public/|.*\\..*$).*)",
-      "dest": "/"
-    }
+    { "src": "/manifest.json", "dest": "/manifest.json" },
+    { "src": "/favicon.ico",   "dest": "/favicon.ico"   },
+    { "src": "/sw.js",         "dest": "/sw.js"         },
+    { "src": "/assets/(.*)",   "dest": "/assets/$1"     },
+    { "src": "/src/(.*)",      "dest": "/src/$1"        },
+    { "src": "/(.*)",          "dest": "/index.html"    }
   ]
 }

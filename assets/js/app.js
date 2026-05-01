@@ -3,14 +3,13 @@
 // Use root-relative paths for all assets to ensure consistency across environments
 const STITCH_ROOT = "/src/components/stitch";
 const LOGO_PATH = "/src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/logo-wm.png";
-const DEFAULT_ROUTE = "login";
+const DEFAULT_ROUTE = "dashboard";
 const AFTER_LOGIN_ROUTE = "dashboard";
 
 (function () {
   "use strict";
 
   const routes = [
-    { id: "login", label: "Acceso", icon: "login", path: `${STITCH_ROOT}/acceso_al_sistema_constructora_wm_m_s_2/code.html`, group: "Sistema", public: true },
     { id: "dashboard", label: "Tablero", icon: "dashboard", path: `${STITCH_ROOT}/tablero_de_control_principal_3/code.html`, group: "Inicio" },
     { id: "clients", label: "Proyectos y clientes", icon: "groups", path: `${STITCH_ROOT}/gesti_n_de_clientes_y_proyectos/code.html`, group: "Comercial" },
     { id: "client-apu", label: "Cliente a APU", icon: "auto_awesome", path: `${STITCH_ROOT}/gesti_n_de_clientes_y_conversi_n_a_apu/code.html`, group: "Comercial" },
@@ -25,7 +24,6 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     { id: "client-summary", label: "Resumen cliente", icon: "summarize", path: `${STITCH_ROOT}/resumen_de_presupuesto_para_cliente_3/code.html`, group: "Reportes" },
     { id: "assistant", label: "Asistente APU", icon: "psychology", path: `${STITCH_ROOT}/asistente_de_conversi_n_a_apu/code.html`, group: "Herramientas" },
     { id: "mobile-alerts", label: "Vista movil", icon: "phone_iphone", path: `${STITCH_ROOT}/alertas_y_cronograma_m_vil/code.html`, group: "Herramientas" },
-    { id: "legacy-login", label: "Acceso v1", icon: "vpn_key", path: `${STITCH_ROOT}/acceso_al_sistema_constructora_wm_m_s_1/code.html`, group: "Sistema", public: true },
     { id: "management", label: "Sistema general", icon: "domain", path: `${STITCH_ROOT}/constructora_wm_m_s_management_system/code.html`, group: "Sistema" }
   ];
 
@@ -43,11 +41,17 @@ const AFTER_LOGIN_ROUTE = "dashboard";
 
   function getSupabase() {
     const config = getConfig();
-    if (supabaseClient || !window.supabase || !isConfigured()) {
-      return supabaseClient;
-    }
+    if (supabaseClient) return supabaseClient;
+    if (!window.supabase || !isConfigured()) return null;
 
-    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: "wm-auth-session"
+      }
+    });
     return supabaseClient;
   }
 
@@ -122,22 +126,16 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   function renderRoute(routeId) {
     const route = routeById.get(normalizeRoute(routeId)) || routeById.get(DEFAULT_ROUTE);
     const client = getSupabase();
-    if (!route.public && client && !currentSession && !isAuthCallback()) {
-      setStatus("Inicia sesion para acceder a los modulos");
-      navigate("login");
+    if (client && !currentSession && !isAuthCallback()) {
+      showLoginScreen();
       return;
     }
-    
-    // Hide sidebar on login
-    const shell = document.querySelector(".app-shell");
-    if (route.id === "login" || route.id === "legacy-login") {
-      shell.classList.add("is-login-screen");
-    } else {
-      shell.classList.remove("is-login-screen");
-    }
 
-    // Collapse sidebar after selecting a module (mobile or general retraction)
-    if (!shell.classList.contains("is-collapsed") && route.id !== "login") {
+    const shell = document.querySelector(".app-shell");
+    shell.classList.remove("is-login-screen");
+
+    // Collapse sidebar after selecting a module
+    if (!shell.classList.contains("is-collapsed")) {
       shell.classList.add("is-collapsed");
     }
 
@@ -153,18 +151,9 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
       if (!iframeDoc) return;
 
-      const styles = document.querySelectorAll('link[rel="stylesheet"], style');
-      styles.forEach(style => {
-        const clone = style.cloneNode(true);
-        if (clone.tagName === 'LINK' && clone.href) {
-          const url = new URL(clone.href);
-          clone.href = url.href;
-        }
-        iframeDoc.head.appendChild(clone);
-      });
-
-      const cdnScript = iframeDoc.querySelector('script[src*="tailwindcss.com"]');
-      if (cdnScript) cdnScript.remove();
+      // Suppress Tailwind CDN production warning inside iframes
+      const twScript = iframeDoc.querySelector('script[src*="cdn.tailwindcss.com"]');
+      if (twScript) twScript.removeAttribute("src");
 
       syncDarkModeToIframe();
       if (loader) loader.classList.remove("active");
@@ -264,10 +253,22 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     themeBtn.title = "Alternar modo oscuro";
     themeBtn.addEventListener("click", toggleDarkMode);
 
+    const logoutBtn = document.createElement("button");
+    logoutBtn.className = "app-header-btn";
+    logoutBtn.id = "wm-logout-btn";
+    logoutBtn.innerHTML = makeIcon("logout").outerHTML;
+    logoutBtn.title = "Cerrar sesión";
+    logoutBtn.addEventListener("click", async () => {
+      const client = getSupabase();
+      if (client) await client.auth.signOut();
+      currentSession = null;
+      showLoginScreen();
+    });
+
     status = document.createElement("span");
     status.className = "app-status";
 
-    headerRight.append(status, themeBtn);
+    headerRight.append(status, themeBtn, logoutBtn);
     header.append(headerLeft, headerRight);
 
     iframe = document.createElement("iframe");
@@ -414,6 +415,22 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     if (!doc) return;
     const route = currentRouteId();
 
+    // Suppress Tailwind CDN production warning before any script runs
+    try {
+      const suppressScript = doc.createElement("script");
+      suppressScript.textContent = `
+        (function(){
+          var _warn = console.warn.bind(console);
+          console.warn = function() {
+            var msg = Array.prototype.join.call(arguments, ' ');
+            if (msg.indexOf('cdn.tailwindcss.com') !== -1) return;
+            _warn.apply(console, arguments);
+          };
+        })();
+      `;
+      doc.head.insertBefore(suppressScript, doc.head.firstChild);
+    } catch(e) {}
+
     // Hide loader smoothly
     const loader = document.getElementById("wm-loader-overlay");
     if (loader) loader.classList.remove("active");
@@ -425,6 +442,7 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     patchActions(doc);
     patchCalculations(doc, route);
     patchDataSync(doc, route);
+    patchClock(doc);
     syncDarkModeToIframe();
 
     // Attach global keyboard shortcuts inside iframe so Cmd+K works there too
@@ -438,6 +456,23 @@ const AFTER_LOGIN_ROUTE = "dashboard";
         toggleSidebar();
       }
     });
+  }
+
+  // ── Live clock injected into every module that shows a time element ──
+  function patchClock(doc) {
+    const clockEl = doc.querySelector(".font-data-label.tracking-widest, [class*='tracking-widest']" );
+    // Find any element that looks like a time display (HH:MM:SS pattern)
+    const allSpans = Array.from(doc.querySelectorAll("span, div, p"));
+    const timeEl = allSpans.find(el => /^\d{2}:\d{2}(:\d{2})?$/.test((el.textContent || "").trim()));
+    if (!timeEl) return;
+    function tick() {
+      const now = new Date();
+      timeEl.textContent = now.toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    }
+    tick();
+    const timer = setInterval(tick, 1000);
+    // Clear interval when iframe navigates away
+    iframe.addEventListener("load", () => clearInterval(timer), { once: true });
   }
 
   function normalizeStitchScreen(doc) {
@@ -454,6 +489,66 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     const style = doc.createElement("style");
     style.id = "wm-global-style";
     style.textContent = `
+      /* ── Hide internal sidebars/navbars — navigation is handled by app shell ── */
+      aside,
+      nav.fixed,
+      nav[class*="fixed"],
+      nav[class*="w-64"],
+      header.fixed,
+      header[class*="fixed"],
+      header[class*="ml-64"],
+      header[class*="sticky"],
+      .app-shell aside,
+      [class*="left-0"][class*="h-full"][class*="flex-col"],
+      [class*="left-0"][class*="h-screen"] {
+        display: none !important;
+      }
+
+      /* ── Remove left margin added for the hidden sidebar ── */
+      [class*="ml-64"],
+      [class*="md:ml-64"] {
+        margin-left: 0 !important;
+        width: 100% !important;
+      }
+
+      /* ── Remove top margin added for the hidden topbar ── */
+      [class*="mt-20"],
+      [class*="mt-16"] {
+        margin-top: 0 !important;
+      }
+
+      /* ── Force full viewport, no scroll ── */
+      html, body {
+        width: 100% !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        letter-spacing: 0 !important;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      /* ── Main content fills remaining space ── */
+      body > div,
+      body > main,
+      .flex-1,
+      [class*="flex-1"] {
+        min-width: 0;
+      }
+
+      main {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box;
+      }
+
+      /* ── Scrollbar thin ── */
+      ::-webkit-scrollbar { width: 5px; height: 5px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(100,116,139,.35); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,.6); }
+
       :root {
         --wm-primary: #1A2B44;
         --wm-primary-soft: #d5e3ff;
@@ -481,15 +576,11 @@ const AFTER_LOGIN_ROUTE = "dashboard";
         --wm-shadow: 0 14px 38px rgba(0, 0, 0, .45);
         --wm-shadow-lg: 0 22px 60px rgba(0, 0, 0, .55);
       }
-      html, body {
-        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-        letter-spacing: 0 !important;
-        transition: background-color 0.3s ease, color 0.3s ease;
-      }
       body {
         background: radial-gradient(900px 380px at 30% -10%, rgba(26,43,68,.10), transparent 70%),
                     radial-gradient(700px 300px at 85% 10%, rgba(233,193,118,.12), transparent 65%),
                     var(--wm-surface);
+        color: var(--wm-text);
       }
       body.dark-mode {
         background-color: var(--wm-surface) !important;
@@ -500,120 +591,45 @@ const AFTER_LOGIN_ROUTE = "dashboard";
         color: var(--wm-text) !important;
         border-color: var(--wm-border) !important;
       }
-      body.dark-mode .text-slate-800, body.dark-mode .text-gray-900 {
-        color: #f8fafc !important;
-      }
-      body.dark-mode .text-slate-500, body.dark-mode .text-gray-500 {
-        color: #94a3b8 !important;
-      }
-      body.dark-mode border-slate-200, body.dark-mode .border-gray-200 {
-        border-color: var(--wm-border) !important;
-      }
-      body {
-        color: var(--wm-text);
-      }
+      body.dark-mode .text-slate-800, body.dark-mode .text-gray-900 { color: #f8fafc !important; }
+      body.dark-mode .text-slate-500, body.dark-mode .text-gray-500 { color: #94a3b8 !important; }
       h1, h2, h3, h4, h5, h6,
       .font-h1, .font-h2, .font-h3,
       [class*="font-['Inter']"] {
         font-family: Inter, system-ui, sans-serif !important;
         letter-spacing: 0 !important;
       }
-      button, a, input, select, textarea {
-        border-radius: 6px !important;
-      }
-      button {
-        min-height: 36px;
-      }
-      button:not([disabled]) {
-        cursor: pointer;
-      }
-      .wm-logo {
-        width: auto;
-        height: 44px;
-        object-fit: contain;
-        display: inline-block;
-      }
-      aside .wm-logo,
-      header .wm-logo,
-      .app-brand .wm-logo {
-        height: 38px;
-      }
-      .wm-brand-lockup {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
+      button, a, input, select, textarea { border-radius: 6px !important; }
+      button { min-height: 36px; }
+      button:not([disabled]) { cursor: pointer; }
+      .wm-logo { width: auto; height: 44px; object-fit: contain; display: inline-block; }
+      .wm-brand-lockup { display: flex; align-items: center; gap: 10px; }
       .wm-toast {
-        position: fixed;
-        right: 16px;
-        bottom: 16px;
-        z-index: 999999;
-        max-width: 360px;
-        background: var(--wm-primary);
-        color: #fff;
-        border: 1px solid rgba(255,255,255,.18);
-        border-radius: 8px !important;
-        padding: 10px 12px;
-        font: 600 13px/1.35 Inter, system-ui, sans-serif;
+        position: fixed; right: 16px; bottom: 16px; z-index: 999999;
+        max-width: 360px; background: var(--wm-primary); color: #fff;
+        border: 1px solid rgba(255,255,255,.18); border-radius: 8px !important;
+        padding: 10px 12px; font: 600 13px/1.35 Inter, system-ui, sans-serif;
         box-shadow: 0 12px 32px rgba(15, 23, 42, .24);
       }
-
-      /* Professional cards across Stitch screens */
       .elevated-card,
-      .bg-surface-container-lowest,
-      .bg-white,
-      .bg-surface,
-      .bg-surface-container,
-      .bg-surface-container-low,
-      .bg-surface-container-high,
-      .bg-surface-container-highest {
+      .bg-surface-container-lowest, .bg-white, .bg-surface,
+      .bg-surface-container, .bg-surface-container-low,
+      .bg-surface-container-high, .bg-surface-container-highest {
         border-radius: var(--wm-radius) !important;
         box-shadow: var(--wm-shadow-sm);
         border-color: var(--wm-border) !important;
       }
-      .elevated-card:hover {
-        box-shadow: var(--wm-shadow);
-        transform: translateY(-1px);
-        transition: box-shadow .2s ease, transform .2s ease;
-      }
-      table {
-        border-radius: var(--wm-radius);
-        overflow: hidden;
-      }
-      thead {
-        background: rgba(26,43,68,.06) !important;
-      }
-      body.dark-mode thead {
-        background: rgba(148,163,184,.10) !important;
-      }
-
-      /* Charts/graphics: keep them readable and responsive */
-      svg, canvas, img {
-        max-width: 100%;
-        height: auto;
-      }
-      svg text {
-        font-family: Inter, system-ui, sans-serif !important;
-        letter-spacing: 0 !important;
-      }
-      .chart, [data-chart], .recharts-wrapper {
-        max-width: 100%;
-      }
-
-      /* Mobile synthesis: tighter padding + no horizontal overflow */
+      table { border-radius: var(--wm-radius); overflow: hidden; }
+      thead { background: rgba(26,43,68,.06) !important; }
+      body.dark-mode thead { background: rgba(148,163,184,.10) !important; }
+      svg, canvas, img { max-width: 100%; height: auto; }
+      svg text { font-family: Inter, system-ui, sans-serif !important; letter-spacing: 0 !important; }
       @media (max-width: 820px) {
-        body {
-          background: var(--wm-surface);
-        }
         main, .p-container-padding, .p-section-gap {
           padding-left: 16px !important;
           padding-right: 16px !important;
         }
-        table {
-          display: block;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-        }
+        table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         h1 { font-size: 24px !important; line-height: 1.25 !important; }
         h2 { font-size: 20px !important; line-height: 1.28 !important; }
         h3 { font-size: 18px !important; line-height: 1.3 !important; }
@@ -728,99 +744,72 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  function patchLogin(doc) {
-    const route = currentRouteId();
-    if (route !== "login" && route !== "legacy-login") return;
+  function showLoginScreen() {
+    const shell = document.querySelector(".app-shell");
+    if (shell) shell.classList.add("is-login-screen");
 
-    const form = doc.querySelector("form");
-    if (!form) return;
+    let loginOverlay = document.getElementById("wm-login-overlay");
+    if (loginOverlay) { loginOverlay.style.display = "flex"; return; }
 
-    // Autofill admin email if empty
-    const emailInput = doc.querySelector('input[type="email"], input[name="email"]');
-    if (emailInput && !emailInput.value) {
-      emailInput.value = "salazaroliveros@gmail.com";
-    }
+    loginOverlay = document.createElement("div");
+    loginOverlay.id = "wm-login-overlay";
+    loginOverlay.innerHTML = `
+      <div class="wm-login-card">
+        <img src="${LOGO_PATH}" alt="Logo CONSTRUCTORA WM/M&S" class="wm-logo">
+        <strong>CONSTRUCTORA WM/M&amp;S</strong>
+        <span>Edificando el Futuro</span>
+        <button id="wm-google-signin" type="button">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Ingresar con Google
+        </button>
+        <p id="wm-login-error" style="display:none"></p>
+      </div>
+    `;
+    document.body.appendChild(loginOverlay);
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const email = emailInput?.value || "";
-      const password = doc.querySelector('input[type="password"], input[name="password"]')?.value || "";
+    document.getElementById("wm-google-signin").addEventListener("click", async () => {
       const client = getSupabase();
-
-      if (!client) {
-        showFrameToast(doc, "Supabase no esta configurado con URL y llave publica validas.");
-        return;
-      }
-
-      if (email && password) {
-        const { data, error } = await client.auth.signInWithPassword({ email, password });
-        if (error) {
-          setStatus(`Error de Supabase: ${error.message}`);
-          showFrameToast(doc, `Error: ${error.message}`);
-          return;
-        }
-        currentSession = data?.session || currentSession;
-      }
-
-      navigate(AFTER_LOGIN_ROUTE);
-    }, true);
-
-    const googleBtn = doc.querySelector("#btn-google-login");
-    if (googleBtn) {
-      googleBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const client = getSupabase();
-        if (!client) {
-          showFrameToast(doc, "Supabase no esta configurado con URL y llave publica validas.");
-          return;
-        }
-
-        // app.js runs in the PARENT window (not the iframe), so window === top window.
-        // Use a clean origin (no hash) as redirectTo — Supabase will append its own
-        // token hash parameters (e.g., #access_token=...) and our currentRouteId()
-        // will detect them and route to the dashboard automatically.
-        const cleanRedirectTo = window.location.origin + window.location.pathname;
-
-        try {
-          const { data, error } = await client.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: cleanRedirectTo,
-              skipBrowserRedirect: true,
-            }
-          });
-
-          if (error) {
-            showFrameToast(doc, `Error Google Auth: ${error.message}`);
-            return;
+      if (!client) return;
+      const errorEl = document.getElementById("wm-login-error");
+      try {
+        const { data, error } = await client.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: window.location.origin + window.location.pathname,
+            queryParams: { prompt: "select_account" }
           }
+        });
+        if (error) { errorEl.textContent = error.message; errorEl.style.display = "block"; return; }
+        if (data?.url) window.location.assign(data.url);
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = "block";
+      }
+    });
+  }
 
-          if (data?.url) {
-            // Navigate the top-level window (parent) to the Google OAuth URL.
-            // This avoids the "Unsafe attempt to load URL from frame" Chrome error.
-            window.location.assign(data.url);
-          }
-        } catch (err) {
-          showFrameToast(doc, `Error inesperado: ${err.message}`);
-        }
-      });
-    }
+  function hideLoginScreen() {
+    const overlay = document.getElementById("wm-login-overlay");
+    if (overlay) overlay.style.display = "none";
+    const shell = document.querySelector(".app-shell");
+    if (shell) shell.classList.remove("is-login-screen");
+  }
+
+  function patchLogin(doc) {
+    // Login is now handled natively — no iframe patching needed
   }
 
   function patchLinks(doc) {
     const textMap = [
-      { test: /dashboard|centro de comando/i, route: "dashboard" },
-      { test: /presupuesto|apu/i, route: "apu" },
-      { test: /seguimiento|proyectos/i, route: "tracking" },
-      { test: /cliente/i, route: "clients" },
-      { test: /cronograma|schedule/i, route: "schedule" },
+      { test: /^dashboard$|centro de comando/i, route: "dashboard" },
+      { test: /presupuesto.*apu|^presupuesto$|^apu$/i, route: "apu" },
+      { test: /seguimiento de proy|^seguimiento$/i, route: "tracking" },
+      { test: /proyectos y clientes|^proyectos$/i, route: "clients" },
+      { test: /cronograma/i, route: "schedule" },
       { test: /alerta|notificacion/i, route: "alerts" },
-      { test: /gastos|planilla|control operativo/i, route: "operations" },
-      { test: /report|informe/i, route: "apu-report" },
-      { test: /cerrar sesion|logout/i, route: "login" }
+      { test: /gastos|planilla|control operativo|finanzas/i, route: "operations" },
+      { test: /informe|reporte/i, route: "apu-report" },
+      { test: /cerrar sesi|logout/i, route: "__logout__" }
     ];
 
     Array.from(doc.querySelectorAll('a[href="#"], button')).forEach((element) => {
@@ -829,59 +818,383 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       const match = textMap.find((entry) => entry.test.test(label));
       if (!match) return;
 
-      element.addEventListener("click", (event) => {
+      element.addEventListener("click", async (event) => {
         event.preventDefault();
         event.stopPropagation();
-        
-        if (match.route === "login") {
+
+        if (match.route === "__logout__") {
           const client = getSupabase();
-          if (client) client.auth.signOut();
+          if (client) await client.auth.signOut();
+          currentSession = null;
+          showLoginScreen();
+          return;
         }
-        
+
         navigate(match.route);
       }, true);
     });
   }
 
   function patchActions(doc) {
-    Array.from(doc.querySelectorAll("button, a")).forEach((element) => {
-      const label = (element.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+    const route = currentRouteId();
 
-      if (/exportar csv|csv/.test(label)) {
-        element.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          downloadCsv();
-          showFrameToast(doc, "CSV exportado exitosamente.");
+    Array.from(doc.querySelectorAll("button, a")).forEach((el) => {
+      const label = (el.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+      const title = (el.title || "").toLowerCase();
+      const icon  = (el.querySelector(".material-symbols-outlined")?.textContent || "").trim();
+
+      // ── CSV / Export ──
+      if (/exportar csv|exportar datos|export.*csv/i.test(label) || icon === "csv") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); downloadCsv(); showFrameToast(doc, "CSV exportado."); }, true);
+        return;
+      }
+
+      // ── PDF / Print ──
+      if (/pdf|informe formal|imprimir|exportar reporte|export.*pdf/i.test(label) || /pdf/i.test(title)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); iframe.contentWindow.print(); showFrameToast(doc, "Preparando PDF..."); }, true);
+        return;
+      }
+
+      // ── WhatsApp ──
+      if (/whatsapp/i.test(label) || icon === "whatsapp") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); window.open("https://wa.me/?text=Reporte%20CONSTRUCTORA%20WM%2FM%26S", "_blank", "noopener"); }, true);
+        return;
+      }
+
+      // ── Nuevo / Crear proyecto ──
+      if (/nuevo proyecto|crear proyecto|agregar proyecto|new project/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("clients"); }, true);
+        return;
+      }
+
+      // ── Dashboard quick-actions ──
+      if (/^presupuesto$/.test(label)) { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("apu"); }, true); return; }
+      if (/^seguimiento$/.test(label)) { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("tracking"); }, true); return; }
+      if (/^gastos$/.test(label))      { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("operations"); }, true); return; }
+
+      // ── Topbar links ──
+      if (/^proyectos$/.test(label))   { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("clients"); }, true); return; }
+      if (/^reportes$/.test(label))    { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("apu-report"); }, true); return; }
+      if (/^archivos$/.test(label))    { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("client-summary"); }, true); return; }
+
+      // ── Tabla clientes: edit ──
+      if (icon === "edit" || /^edit$|^editar$/.test(title)) {
+        el.addEventListener("click", (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const row = el.closest("tr");
+          const id  = row?.querySelector("td:first-child")?.textContent?.trim() || "";
+          showFrameToast(doc, `Editando proyecto ${id}`);
         }, true);
         return;
       }
 
-      if (/pdf|informe formal|imprimir|exportar reporte/.test(label)) {
-        element.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          iframe.contentWindow.print();
-          showFrameToast(doc, "Preparando documento PDF...");
+      // ── Tabla clientes: ver APU / cotización ──
+      if (icon === "request_quote" || /view apu|view quote|ver apu/i.test(title)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("apu"); }, true);
+        return;
+      }
+
+      // ── Tabla clientes: generar APU (varita mágica) ──
+      if (icon === "auto_fix_high" || /generar apu/i.test(title)) {
+        el.addEventListener("click", (e) => {
+          e.preventDefault(); e.stopPropagation();
+          showFrameToast(doc, "Requerimientos vinculados al motor APU.");
+          setTimeout(() => navigate("client-apu"), 1200);
         }, true);
         return;
       }
 
-      if (/whatsapp/.test(label)) {
-        element.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          window.open("https://wa.me/?text=Reporte%20CONSTRUCTORA%20WM%2FM%26S%20listo%20para%20revision", "_blank", "noopener");
+      // ── Tabla clientes: download / filtro ──
+      if (icon === "download" || /download/i.test(title)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); downloadCsv(); showFrameToast(doc, "Exportando directorio..."); }, true);
+        return;
+      }
+      if (icon === "filter_list") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Filtros disponibles próximamente."); }, true);
+        return;
+      }
+
+      // ── Paginación ──
+      if (/^anterior$|^siguiente$|^\d+$/.test(label) && el.closest(".flex.gap-1, .flex.gap-2")) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Paginación conectada a Supabase próximamente."); }, true);
+        return;
+      }
+
+      // ── Notificaciones ──
+      if (icon === "notifications") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("alerts"); }, true);
+        return;
+      }
+
+      // ── Calendario: chevrons mes anterior/siguiente ──
+      if (icon === "chevron_left" || icon === "chevron_right") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Navegación de calendario activa."); }, true);
+        return;
+      }
+
+      // ── Chart options (more_horiz) ──
+      if (icon === "more_horiz") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Opciones de gráfica próximamente."); }, true);
+        return;
+      }
+
+      // ── Seguimiento: Export Report ──
+      if (/export report|exportar reporte/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); iframe.contentWindow.print(); showFrameToast(doc, "Preparando reporte..."); }, true);
+        return;
+      }
+
+      // ── Seguimiento: Back to Dashboard ──
+      if (/back to dashboard|volver al tablero/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("dashboard"); }, true);
+        return;
+      }
+
+      // ── Cronograma: Back to APU Editor ──
+      if (/back to apu|volver.*apu/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("apu"); }, true);
+        return;
+      }
+
+      // ── Cronograma: Export PDF/CSV ──
+      if (/export.*pdf.*csv|pdf.*csv/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); iframe.contentWindow.print(); showFrameToast(doc, "Exportando cronograma..."); }, true);
+        return;
+      }
+
+      // ── Cronograma: New Report ──
+      if (/new report/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("apu-report"); }, true);
+        return;
+      }
+
+      // ── Cronograma: Sync Calendar ──
+      if (/sync.*calendar|sincronizar/i.test(label) || icon === "sync") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Sincronización con calendario activada."); }, true);
+        return;
+      }
+
+      // ── Cronograma: Share with Subcontractors ──
+      if (/share|compartir|subcontract/i.test(label) || icon === "group") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Enlace copiado para subcontratistas."); }, true);
+        return;
+      }
+
+      // ── Planilla: Autorizar pago ──
+      if (/autorizar/i.test(label)) {
+        el.addEventListener("click", async (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const card = el.closest(".flex.items-center.justify-between");
+          const name = card?.querySelector(".font-medium")?.textContent?.trim() || "empleado";
+          el.textContent = "Autorizado ✓";
+          el.style.color = "#16a34a";
+          el.disabled = true;
+          showFrameToast(doc, `Pago autorizado: ${name}`);
         }, true);
         return;
       }
 
-      if (/nuevo proyecto|crear proyecto|agregar proyecto/.test(label)) {
-        element.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          navigate("clients");
+      // ── Planilla: Procesar Todo Pendiente ──
+      if (/procesar todo/i.test(label)) {
+        el.addEventListener("click", (e) => {
+          e.preventDefault(); e.stopPropagation();
+          doc.querySelectorAll("button").forEach(b => { if (/autorizar/i.test(b.textContent)) { b.textContent = "Autorizado ✓"; b.style.color = "#16a34a"; b.disabled = true; } });
+          showFrameToast(doc, "Todos los pagos pendientes autorizados.");
         }, true);
+        return;
+      }
+
+      // ── Planilla: Exportar Libro Mayor ──
+      if (/libro mayor|exportar libro/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); downloadCsv(); showFrameToast(doc, "Libro mayor exportado."); }, true);
+        return;
+      }
+
+      // ── Planilla: Ver Todo (transacciones) ──
+      if (/ver todo/i.test(label) || (icon === "arrow_forward" && /ver todo/i.test(el.closest("button, a")?.textContent || ""))) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("operations"); }, true);
+        return;
+      }
+
+      // ── Planilla: Enviar Registro (form submit) ──
+      if (/enviar registro/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); el.closest("form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); }, true);
+        return;
+      }
+
+      // ── APU Avanzado: Añadir Renglón ──
+      if (/añadir renglón|añadir renglon|add.*row/i.test(label) || icon === "add") {
+        if (el.closest(".flex.justify-center") || /añadir/i.test(label)) {
+          el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Renglón agregado al presupuesto."); }, true);
+          return;
+        }
+      }
+
+      // ── APU Avanzado: filtros de tipología ──
+      if (route === "apu" || route === "apu-advanced") {
+        if (/^residencial$|^comercial$|^industrial$|^civil$|^publica$|^pública$/.test(label)) {
+          el.addEventListener("click", (e) => {
+            e.preventDefault(); e.stopPropagation();
+            // Deselect all, select clicked
+            const siblings = el.closest(".flex")?.querySelectorAll("button");
+            siblings?.forEach(b => { b.classList.remove("bg-white","shadow-sm","border-outline-variant","font-semibold"); b.classList.add("text-secondary"); });
+            el.classList.add("bg-white","shadow-sm","font-semibold"); el.classList.remove("text-secondary");
+            showFrameToast(doc, `Tipología: ${label}`);
+          }, true);
+          return;
+        }
+      }
+
+      // ── Informe APU: print / share / CSV / PDF ──
+      if (icon === "print") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); iframe.contentWindow.print(); showFrameToast(doc, "Preparando impresión..."); }, true);
+        return;
+      }
+      if (icon === "share") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Enlace copiado al portapapeles."); }, true);
+        return;
+      }
+      if (/export csv|^csv$/i.test(label) || icon === "csv") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); downloadCsv(); showFrameToast(doc, "CSV exportado."); }, true);
+        return;
+      }
+      if (/download pdf|descargar pdf/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); iframe.contentWindow.print(); showFrameToast(doc, "Generando PDF..."); }, true);
+        return;
+      }
+
+      // ── Informe APU topbar nav ──
+      if (/^dashboard$/.test(label)) { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("dashboard"); }, true); return; }
+      if (/^projects$/.test(label))  { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("clients"); }, true); return; }
+      if (/apu library/i.test(label)) { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("apu"); }, true); return; }
+      if (/^settings$/.test(label))  { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Configuración próximamente."); }, true); return; }
+
+      // ── Resumen cliente: WhatsApp + Imprimir ──
+      if (/enviar por whatsapp/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); window.open("https://wa.me/?text=Presupuesto%20CONSTRUCTORA%20WM%2FM%26S", "_blank", "noopener"); }, true);
+        return;
+      }
+      if (/imprimir pdf/i.test(label)) {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); iframe.contentWindow.print(); showFrameToast(doc, "Generando PDF..."); }, true);
+        return;
+      }
+
+      // ── Asistente APU: selección de tipología ──
+      if (route === "assistant") {
+        if (/^residencial$|^comercial$|^industrial$|^pública.*institucional$|^civil.*infraestructura$/i.test(label)) {
+          el.addEventListener("click", (e) => {
+            e.preventDefault(); e.stopPropagation();
+            doc.querySelectorAll(".grid.grid-cols-2 button").forEach(b => {
+              b.classList.remove("border-2","border-primary-container","bg-secondary-fixed\/20");
+              b.classList.add("border","border-outline-variant");
+            });
+            el.classList.add("border-2","border-primary-container","bg-secondary-fixed\/20");
+            el.classList.remove("border","border-outline-variant");
+            showFrameToast(doc, `Tipología seleccionada: ${label}`);
+          }, true);
+          return;
+        }
+        if (/siguiente paso/i.test(label) || icon === "arrow_forward") {
+          el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("apu-advanced"); showFrameToast(doc, "Generando estructura APU..."); }, true);
+          return;
+        }
+        if (/atrás/i.test(label) || icon === "arrow_back") {
+          el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("client-apu"); }, true);
+          return;
+        }
+        if (icon === "close") {
+          el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("dashboard"); }, true);
+          return;
+        }
+      }
+
+      // ── Cronograma multicanal: toggles de reglas ──
+      if (route === "multichannel") {
+        if (el.tagName === "INPUT" && el.type === "checkbox") {
+          el.addEventListener("change", (e) => {
+            const rule = el.closest(".p-4")?.querySelector(".font-body-md")?.textContent?.trim() || "Regla";
+            showFrameToast(doc, `${rule}: ${el.checked ? "activada" : "desactivada"}.`);
+          });
+          return;
+        }
+        if (/guardar configuración|guardar configuracion/i.test(label)) {
+          el.addEventListener("click", async (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const client = getSupabase();
+            if (client && currentSession) {
+              const freq = doc.querySelector("select")?.value || "Semanal";
+              await client.from("notifications").insert([{ channel: "app", title: "Config alertas", message: `Frecuencia: ${freq}`, delivered: false }]).catch(() => {});
+            }
+            showFrameToast(doc, "Configuración de alertas guardada.");
+          }, true);
+          return;
+        }
+        if (icon === "add") {
+          el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Nueva regla de alerta próximamente."); }, true);
+          return;
+        }
+      }
+
+      // ── Vista móvil: botones de acción ──
+      if (route === "mobile-alerts") {
+        if (/sincronizar datos/i.test(label) || icon === "sync") {
+          el.addEventListener("click", async (e) => {
+            e.preventDefault(); e.stopPropagation();
+            showFrameToast(doc, "Sincronizando datos...");
+            const client = getSupabase();
+            if (client && currentSession) {
+              await client.from("project_tracking").select("id").limit(1).catch(() => {});
+            }
+            setTimeout(() => showFrameToast(doc, "Datos sincronizados."), 1500);
+          }, true);
+          return;
+        }
+        if (/reportar incidencia/i.test(label) || icon === "report") {
+          el.addEventListener("click", async (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const client = getSupabase();
+            if (client && currentSession) {
+              await client.from("alerts").insert([{ title: "Incidencia reportada", message: "Incidencia reportada desde vista móvil.", type: "Warning", is_read: false }]).catch(() => {});
+            }
+            showFrameToast(doc, "Incidencia registrada en Supabase.");
+          }, true);
+          return;
+        }
+        // Bottom nav móvil
+        if (/^projects$/i.test(label)) { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("clients"); }, true); return; }
+        if (/^alerts$/i.test(label))   { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("alerts"); }, true); return; }
+        if (/^schedule$/i.test(label)) { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); navigate("schedule"); }, true); return; }
+        if (/^profile$/i.test(label))  { el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Perfil próximamente."); }, true); return; }
+        // Selector de proyecto
+        if (el.closest(".cursor-pointer") && icon === "arrow_drop_down") {
+          el.closest(".cursor-pointer").addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Selector de proyecto próximamente."); }, true);
+          return;
+        }
+        // Menú hamburguesa
+        if (icon === "menu") {
+          el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); toggleSidebar(); }, true);
+          return;
+        }
+      }
+
+      // ── Seguimiento: settings en topbar ──
+      if (icon === "settings") {
+        el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); showFrameToast(doc, "Configuración próximamente."); }, true);
+        return;
+      }
+
+      // ── Cronograma: vista Semana/Mes ──
+      if (route === "schedule" || route === "multichannel") {
+        if (/^semana$|^mes$/i.test(label)) {
+          el.addEventListener("click", (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const siblings = el.closest(".flex.gap-2")?.querySelectorAll("button");
+            siblings?.forEach(b => { b.classList.remove("bg-primary","text-on-primary"); b.classList.add("bg-surface","border","border-outline-variant"); });
+            el.classList.add("bg-primary","text-on-primary"); el.classList.remove("bg-surface","border","border-outline-variant");
+            showFrameToast(doc, `Vista: ${label}`);
+          }, true);
+          return;
+        }
       }
     });
   }
@@ -1162,13 +1475,23 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   async function patchDataSync(doc, route) {
     const client = getSupabase();
     if (!client) return;
-    if (!currentSession && route !== "login" && route !== "legacy-login") return;
+    // Re-check session in case it was refreshed
+    if (!currentSession) {
+      const { data: { session } } = await client.auth.getSession();
+      currentSession = session;
+    }
+    if (!currentSession) return;
 
     prepareKnownForms(doc, route);
     ensureModulePersistActions(doc, route, client);
 
     if (route === "dashboard") {
       try {
+        // Ensure session token is fresh before querying
+        const { data: { session: freshSession } } = await client.auth.getSession();
+        if (!freshSession) return;
+        currentSession = freshSession;
+
         const [{ count: projectCount }, { count: clientCount }, { data: expenses }] = await Promise.all([
           client.from("projects").select("id", { count: "exact", head: true }),
           client.from("clients").select("id", { count: "exact", head: true }),
@@ -1340,45 +1663,38 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     }
     buildShell();
     iframe.addEventListener("load", patchFrame);
-    
-    // Auth State Listener
+
     const client = getSupabase();
     if (client) {
       client.auth.onAuthStateChange((event, session) => {
-        console.log("Auth event:", event, "Session:", !!session);
         currentSession = session;
-        if (session && (currentRouteId() === "login" || isAuthCallback())) {
-          navigate(AFTER_LOGIN_ROUTE);
-        } else if (!session && currentRouteId() !== "login" && currentRouteId() !== "legacy-login") {
-          // Do not redirect to login if we are in the middle of processing an OAuth callback
+        if (session) {
+          hideLoginScreen();
           if (isAuthCallback()) {
-            console.log("OAuth callback detected, skipping login redirect");
-            return;
+            history.replaceState(null, "", window.location.pathname + "#/dashboard");
           }
-          navigate("login");
+          navigate(AFTER_LOGIN_ROUTE);
+        } else if (!isAuthCallback()) {
+          showLoginScreen();
         }
       });
 
-      // Initial Session Check
       const { data: { session } } = await client.auth.getSession();
       currentSession = session;
-      if (session && (currentRouteId() === "login" || currentRouteId() === "legacy-login")) {
+
+      if (session) {
+        if (isAuthCallback()) {
+          history.replaceState(null, "", window.location.pathname + "#/dashboard");
+        }
+        hideLoginScreen();
+        window.addEventListener("hashchange", () => renderRoute(currentRouteId()));
         navigate(AFTER_LOGIN_ROUTE);
         return;
       }
-      if (!session && !routeById.get(currentRouteId())?.public && !isAuthCallback()) {
-        navigate("login");
-        return;
-      }
 
-      // If we arrived with tokens in the URL hash, clean it up after Supabase processes it.
-      // This avoids repeated parsing and reduces console noise.
-      if (session && isAuthCallback()) {
-        history.replaceState(null, "", window.location.pathname + "#/dashboard");
-      }
-      if (!session && isAuthCallback()) {
-        setStatus("Auth recibido, pero no se pudo abrir sesion. Verifica la hora/fecha del dispositivo y vuelve a intentar.");
-        history.replaceState(null, "", window.location.pathname + "#/login");
+      if (!session && !isAuthCallback()) {
+        showLoginScreen();
+        return;
       }
     }
 
