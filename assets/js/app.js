@@ -582,6 +582,7 @@ const AFTER_LOGIN_ROUTE = "dashboard";
 
     bar.append(prevBtn, center, nextBtn);
     doc.body.appendChild(bar);
+    doc.body.classList.add("has-flow-nav");
   }
 
   // ── Live clock ──────────────────────────────────────────────────────────
@@ -633,66 +634,106 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     const style = doc.createElement("style");
     style.id = "wm-global-style";
     style.textContent = `
-      /* ── Hide internal sidebars/navbars — navigation is handled by app shell ── */
+      /* ── Ocultar sidebars/navbars internos ── */
       aside,
-      nav.fixed,
-      nav[class*="fixed"],
-      nav[class*="w-64"],
-      header.fixed,
-      header[class*="fixed"],
-      header[class*="ml-64"],
-      header[class*="sticky"],
+      nav.fixed, nav[class*="fixed"], nav[class*="w-64"],
+      header.fixed, header[class*="fixed"], header[class*="ml-64"], header[class*="sticky"],
       .app-shell aside,
       [class*="left-0"][class*="h-full"][class*="flex-col"],
       [class*="left-0"][class*="h-screen"] {
         display: none !important;
       }
 
-      /* ── Remove left margin added for the hidden sidebar ── */
-      [class*="ml-64"],
-      [class*="md:ml-64"] {
+      /* ── Quitar márgenes del sidebar oculto ── */
+      [class*="ml-64"], [class*="md:ml-64"] {
         margin-left: 0 !important;
         width: 100% !important;
       }
+      [class*="mt-20"], [class*="mt-16"] { margin-top: 0 !important; }
 
-      /* ── Remove top margin added for the hidden topbar ── */
-      [class*="mt-20"],
-      [class*="mt-16"] {
-        margin-top: 0 !important;
-      }
-
-      /* ── Force full viewport, no scroll ── */
-      html, body {
+      /* ── Base: pantalla completa, sin scroll externo ── */
+      html {
         width: 100% !important;
-        height: 100vh !important;
+        height: 100% !important;
         overflow: hidden !important;
+      }
+      body {
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
         font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         letter-spacing: 0 !important;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        box-sizing: border-box;
       }
 
-      /* ── Main content fills remaining space ── */
-      body > div,
-      body > main,
-      .flex-1,
-      [class*="flex-1"] {
-        min-width: 0;
-      }
-
-      main {
-        height: 100vh !important;
-        max-height: 100vh !important;
+      /* ── Contenedor principal: ocupa todo el espacio disponible ──
+         Descuenta 52px de la barra de flujo inferior (#wm-flow-nav)
+         El scroll vertical solo aparece cuando el contenido lo necesita */
+      body > div:not(#wm-flow-nav),
+      body > main:not(#wm-flow-nav) {
+        height: 100% !important;
+        max-height: 100% !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         box-sizing: border-box;
       }
 
-      /* ── Scrollbar thin ── */
-      ::-webkit-scrollbar { width: 5px; height: 5px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(100,116,139,.35); border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,.6); }
+      /* Cuando hay barra de flujo, descontar su altura */
+      body.has-flow-nav > div:not(#wm-flow-nav),
+      body.has-flow-nav > main:not(#wm-flow-nav) {
+        height: calc(100% - 52px) !important;
+        max-height: calc(100% - 52px) !important;
+      }
 
+      main {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box;
+      }
+
+      /* ── Flex containers: llenar espacio sin desbordarse ── */
+      .flex-1, [class*="flex-1"] { min-width: 0; min-height: 0; }
+      .flex { min-width: 0; }
+
+      /* ── Textos: no rebosar contenedores ── */
+      h1, h2, h3, h4, h5, h6,
+      .font-h1, .font-h2, .font-h3,
+      [class*="font-['Inter']"] {
+        font-family: Inter, system-ui, sans-serif !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        min-width: 0;
+      }
+      p, span, td, th, li, label {
+        overflow-wrap: break-word;
+        word-break: break-word;
+        min-width: 0;
+      }
+      /* Truncar textos en celdas de tabla */
+      td, th { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* Excepto celdas que deben envolver */
+      td.wrap, th.wrap { white-space: normal; }
+
+      /* ── Tablas: scroll horizontal solo si es necesario ── */
+      .overflow-x-auto, [class*="overflow-x-auto"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+      /* ── Imágenes y SVG: no rebosar ── */
+      img, svg, canvas { max-width: 100%; height: auto; }
+
+      /* ── Scrollbar delgado ── */
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(100,116,139,.3); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,.55); }
+
+      /* ── Variables de diseño ── */
       :root {
         --wm-primary: #1A2B44;
         --wm-primary-soft: #d5e3ff;
@@ -704,21 +745,16 @@ const AFTER_LOGIN_ROUTE = "dashboard";
         --wm-alert: #b45309;
         --wm-danger: #ba1a1a;
         --wm-radius: 8px;
-        --wm-shadow-sm: 0 1px 2px rgba(15, 23, 42, .06);
-        --wm-shadow: 0 10px 30px rgba(15, 23, 42, .10);
-        --wm-shadow-lg: 0 18px 48px rgba(15, 23, 42, .16);
+        --wm-shadow-sm: 0 1px 2px rgba(15,23,42,.06);
+        --wm-shadow: 0 10px 30px rgba(15,23,42,.10);
       }
       .dark-mode, .dark {
         --wm-primary: #101a29;
-        --wm-primary-soft: #1a2b44;
         --wm-surface: #0c0f10;
         --wm-panel: #172033;
         --wm-text: #e5e7eb;
         --wm-muted: #94a3b8;
         --wm-border: #334155;
-        --wm-shadow-sm: 0 1px 2px rgba(0, 0, 0, .35);
-        --wm-shadow: 0 14px 38px rgba(0, 0, 0, .45);
-        --wm-shadow-lg: 0 22px 60px rgba(0, 0, 0, .55);
       }
       body {
         background: radial-gradient(900px 380px at 30% -10%, rgba(26,43,68,.10), transparent 70%),
@@ -726,37 +762,27 @@ const AFTER_LOGIN_ROUTE = "dashboard";
                     var(--wm-surface);
         color: var(--wm-text);
       }
-      body.dark-mode {
-        background-color: var(--wm-surface) !important;
-        color: var(--wm-text) !important;
-      }
-      body.dark-mode .bg-white {
-        background-color: var(--wm-panel) !important;
-        color: var(--wm-text) !important;
-        border-color: var(--wm-border) !important;
-      }
+      body.dark-mode { background-color: var(--wm-surface) !important; color: var(--wm-text) !important; }
+      body.dark-mode .bg-white { background-color: var(--wm-panel) !important; color: var(--wm-text) !important; border-color: var(--wm-border) !important; }
       body.dark-mode .text-slate-800, body.dark-mode .text-gray-900 { color: #f8fafc !important; }
       body.dark-mode .text-slate-500, body.dark-mode .text-gray-500 { color: #94a3b8 !important; }
-      h1, h2, h3, h4, h5, h6,
-      .font-h1, .font-h2, .font-h3,
-      [class*="font-['Inter']"] {
-        font-family: Inter, system-ui, sans-serif !important;
-        letter-spacing: 0 !important;
-      }
+
       button, a, input, select, textarea { border-radius: 6px !important; }
       button { min-height: 36px; }
       button:not([disabled]) { cursor: pointer; }
+
       .wm-logo { width: auto; height: 44px; object-fit: contain; display: inline-block; }
       .wm-brand-lockup { display: flex; align-items: center; gap: 10px; }
+
       .wm-toast {
-        position: fixed; right: 16px; bottom: 16px; z-index: 999999;
-        max-width: 360px; background: var(--wm-primary); color: #fff;
+        position: fixed; right: 16px; bottom: 60px; z-index: 999999;
+        max-width: 340px; background: var(--wm-primary); color: #fff;
         border: 1px solid rgba(255,255,255,.18); border-radius: 8px !important;
         padding: 10px 12px; font: 600 13px/1.35 Inter, system-ui, sans-serif;
-        box-shadow: 0 12px 32px rgba(15, 23, 42, .24);
+        box-shadow: 0 12px 32px rgba(15,23,42,.24);
       }
-      .elevated-card,
-      .bg-surface-container-lowest, .bg-white, .bg-surface,
+
+      .elevated-card, .bg-surface-container-lowest, .bg-white, .bg-surface,
       .bg-surface-container, .bg-surface-container-low,
       .bg-surface-container-high, .bg-surface-container-highest {
         border-radius: var(--wm-radius) !important;
@@ -766,17 +792,19 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       table { border-radius: var(--wm-radius); overflow: hidden; }
       thead { background: rgba(26,43,68,.06) !important; }
       body.dark-mode thead { background: rgba(148,163,184,.10) !important; }
-      svg, canvas, img { max-width: 100%; height: auto; }
       svg text { font-family: Inter, system-ui, sans-serif !important; letter-spacing: 0 !important; }
+
+      /* ── Responsive: ajustes móvil ── */
       @media (max-width: 820px) {
         main, .p-container-padding, .p-section-gap {
-          padding-left: 16px !important;
-          padding-right: 16px !important;
+          padding-left: 12px !important;
+          padding-right: 12px !important;
         }
-        table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        h1 { font-size: 24px !important; line-height: 1.25 !important; }
-        h2 { font-size: 20px !important; line-height: 1.28 !important; }
-        h3 { font-size: 18px !important; line-height: 1.3 !important; }
+        h1 { font-size: 22px !important; line-height: 1.25 !important; }
+        h2 { font-size: 18px !important; line-height: 1.28 !important; }
+        h3 { font-size: 16px !important; line-height: 1.3 !important; }
+        /* Tablas en móvil: scroll horizontal */
+        .overflow-x-auto table { table-layout: auto; }
       }
     `;
     doc.head.appendChild(style);
