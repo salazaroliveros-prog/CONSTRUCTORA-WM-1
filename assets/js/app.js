@@ -153,17 +153,21 @@ const AFTER_LOGIN_ROUTE = "dashboard";
 
     const shell = document.querySelector(".app-shell");
     shell.classList.remove("is-login-screen");
-    if (!shell.classList.contains("is-collapsed")) {
+
+    // Dashboard: sidebar abierto para mostrar el menú principal
+    // Otros módulos: sidebar colapsado, solo accesible via hamburguesa
+    if (route.id === "dashboard") {
+      shell.classList.remove("is-collapsed");
+    } else {
       shell.classList.add("is-collapsed");
     }
 
     const loader = document.getElementById("wm-loader-overlay");
 
-    // Si el módulo está en cache, cargarlo y re-parchear
     if (moduleCache.has(route.id)) {
       if (loader) loader.classList.remove("active");
       iframe.classList.remove("loading");
-      iframe.src = route.path; // Recargar desde path para que patchFrame se dispare
+      iframe.src = route.path;
       title.textContent = route.label;
     } else {
       if (loader) loader.classList.add("active");
@@ -174,10 +178,8 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       iframe.onload = () => {
         const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
         if (!iframeDoc) return;
-        // Suprimir Tailwind CDN warning
         const twScript = iframeDoc.querySelector('script[src*="cdn.tailwindcss.com"]');
         if (twScript) twScript.removeAttribute("src");
-        // Guardar ruta en cache (solo marca que fue visitada)
         try { moduleCache.set(route.id, true); } catch(e) {}
         syncDarkModeToIframe();
         if (loader) loader.classList.remove("active");
@@ -192,8 +194,6 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     });
 
     setStatus(isConfigured() ? "" : "Modo demo");
-
-    // Precargar los 2 módulos más probables en background
     prefetchAdjacentRoutes(route.id);
   }
 
@@ -487,6 +487,7 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     patchCalculations(doc, route);
     patchDataSync(doc, route);
     patchClock(doc);
+    injectFlowNav(doc, route);  // barra de flujo contextual
     syncDarkModeToIframe();
 
     // Attach global keyboard shortcuts inside iframe so Cmd+K works there too
@@ -502,7 +503,88 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     });
   }
 
-  // ── Live clock injected into every module that shows a time element ──
+  // ── Barra de navegación contextual del flujo de trabajo ──────────────
+  // Solo en módulos que no son el dashboard
+  // Flujo: Clientes → APU → Seguimiento → Gastos
+  function injectFlowNav(doc, route) {
+    if (route === "dashboard" || doc.getElementById("wm-flow-nav")) return;
+
+    // Mapa de flujo: dónde va cada módulo
+    const flowMap = {
+      "clients":       { prev: "dashboard",  next: "apu",        prevLabel: "Tablero",          nextLabel: "Presupuestos APU" },
+      "client-apu":    { prev: "clients",    next: "apu",        prevLabel: "Clientes",          nextLabel: "Presupuestos APU" },
+      "apu":           { prev: "clients",    next: "apu-advanced", prevLabel: "Clientes",        nextLabel: "Desglose APU" },
+      "apu-advanced":  { prev: "apu",        next: "tracking",   prevLabel: "Presupuesto APU",   nextLabel: "Seguimiento" },
+      "tracking":      { prev: "apu",        next: "operations", prevLabel: "Presupuesto APU",   nextLabel: "Finanzas y gastos" },
+      "alerts":        { prev: "tracking",   next: "operations", prevLabel: "Seguimiento",       nextLabel: "Finanzas y gastos" },
+      "schedule":      { prev: "tracking",   next: "multichannel", prevLabel: "Seguimiento",     nextLabel: "Cronograma y alertas" },
+      "multichannel":  { prev: "schedule",   next: "operations", prevLabel: "Cronograma",        nextLabel: "Finanzas y gastos" },
+      "operations":    { prev: "tracking",   next: "dashboard",  prevLabel: "Seguimiento",       nextLabel: "Tablero" },
+      "apu-report":    { prev: "apu",        next: "client-summary", prevLabel: "APU",           nextLabel: "Resumen cliente" },
+      "client-summary":{ prev: "apu-report", next: "dashboard",  prevLabel: "Informe APU",       nextLabel: "Tablero" },
+      "assistant":     { prev: "client-apu", next: "apu-advanced", prevLabel: "Cliente a APU",   nextLabel: "Desglose APU" },
+      "mobile-alerts": { prev: "alerts",     next: "dashboard",  prevLabel: "Alertas",           nextLabel: "Tablero" },
+      "management":    { prev: "dashboard",  next: "dashboard",  prevLabel: "Tablero",           nextLabel: "Tablero" },
+    };
+
+    const flow = flowMap[route];
+    if (!flow) return;
+
+    const style = doc.createElement("style");
+    style.textContent = `
+      #wm-flow-nav {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 9000;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 8px 16px;
+        background: rgba(26,43,68,.96);
+        backdrop-filter: blur(8px);
+        border-top: 1px solid rgba(255,255,255,.1);
+        gap: 8px;
+      }
+      .wm-flow-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+        color: #e5e7eb; border-radius: 6px !important;
+        padding: 6px 12px; font: 600 12px/1 Inter, system-ui, sans-serif;
+        cursor: pointer; transition: background .15s ease;
+        min-height: 32px;
+      }
+      .wm-flow-btn:hover { background: rgba(255,255,255,.2); }
+      .wm-flow-btn.primary {
+        background: #e9c176; border-color: #e9c176; color: #1a2b44;
+      }
+      .wm-flow-btn.primary:hover { background: #f0d090; }
+      .wm-flow-center {
+        font: 500 11px/1 Inter, system-ui, sans-serif;
+        color: rgba(255,255,255,.5); text-align: center; flex: 1;
+      }
+      /* Espacio para que el contenido no quede tapado por la barra */
+      body { padding-bottom: 52px !important; }
+    `;
+    doc.head.appendChild(style);
+
+    const bar = doc.createElement("div");
+    bar.id = "wm-flow-nav";
+
+    const prevBtn = doc.createElement("button");
+    prevBtn.className = "wm-flow-btn";
+    prevBtn.innerHTML = `← ${flow.prevLabel}`;
+    prevBtn.addEventListener("click", () => navigate(flow.prev));
+
+    const center = doc.createElement("span");
+    center.className = "wm-flow-center";
+    center.textContent = "CONSTRUCTORA WM/M\u0026S";
+
+    const nextBtn = doc.createElement("button");
+    nextBtn.className = "wm-flow-btn primary";
+    nextBtn.innerHTML = `${flow.nextLabel} →`;
+    nextBtn.addEventListener("click", () => navigate(flow.next));
+
+    bar.append(prevBtn, center, nextBtn);
+    doc.body.appendChild(bar);
+  }
+
+  // ── Live clock ──────────────────────────────────────────────────────────
   function patchClock(doc) {
     const clockEl = doc.querySelector(".font-data-label.tracking-widest, [class*='tracking-widest']" );
     // Find any element that looks like a time display (HH:MM:SS pattern)
@@ -1543,16 +1625,28 @@ const AFTER_LOGIN_ROUTE = "dashboard";
 
     if (route === "dashboard") {
       try {
-        const [{ count: projectCount }, { count: clientCount }, { data: expenses }] = await Promise.all([
+        const [{ count: projectCount }, { count: clientCount }, { data: expenses }, { data: tracking }] = await Promise.all([
           client.from("projects").select("id", { count: "exact", head: true }),
           client.from("clients").select("id", { count: "exact", head: true }),
-          client.from("expenses").select("amount").limit(500)
+          client.from("expenses").select("amount").limit(500),
+          client.from("project_tracking").select("physical_pct, financial_pct, income, expenses_total").order("snapshot_date", { ascending: false }).limit(10)
         ]);
+
         updateMetricNearLabel(doc, /total de proyectos|proyectos/i, projectCount ?? 0);
         updateMetricNearLabel(doc, /clientes|cartera/i, clientCount ?? 0);
+
         const totalExpenses = (expenses || []).reduce((sum, item) => sum + parseNumber(item.amount), 0);
         if (totalExpenses > 0) {
           updateMetricNearLabel(doc, /gastos|expenses/i, `Q ${totalExpenses.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        }
+
+        // Avance promedio físico desde project_tracking
+        if (tracking && tracking.length > 0) {
+          const avgPhysical = Math.round(tracking.reduce((s, r) => s + parseNumber(r.physical_pct), 0) / tracking.length);
+          updateMetricNearLabel(doc, /progreso promedio|avance/i, `${avgPhysical}%`);
+          // Actualizar barra de progreso
+          const progressBar = doc.querySelector(".bg-primary.h-full.rounded-full");
+          if (progressBar) progressBar.style.width = `${avgPhysical}%`;
         }
       } catch(e) {
         console.error("Supabase sync error", e);
