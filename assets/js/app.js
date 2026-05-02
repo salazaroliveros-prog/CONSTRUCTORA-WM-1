@@ -3,6 +3,8 @@
 // Use root-relative paths for all assets to ensure consistency across environments
 const STITCH_ROOT = "/src/components/stitch";
 const LOGO_PATH = "/src/components/stitch/modern_minimalist_logo_for_an_architecture_and_construction_company_named/logo-wm.png";
+// Placeholder SVG inline (0 requests HTTP) — se reemplaza por el PNG real cuando carga
+const LOGO_PLACEHOLDER = window.WM_LOGO_PLACEHOLDER || LOGO_PATH;
 const DEFAULT_ROUTE = "dashboard";
 const AFTER_LOGIN_ROUTE = "dashboard";
 
@@ -238,8 +240,14 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     const brand = document.createElement("section");
     brand.className = "app-brand";
     const brandImg = document.createElement("img");
-    brandImg.src = LOGO_PATH;
+    brandImg.src = LOGO_PLACEHOLDER;
     brandImg.alt = "Logotipo CONSTRUCTORA WM/M&S";
+    // Lazy load del PNG real
+    if (LOGO_PLACEHOLDER !== LOGO_PATH) {
+      const realImg = new Image();
+      realImg.onload = () => { brandImg.src = LOGO_PATH; };
+      realImg.src = LOGO_PATH;
+    }
     const brandName = document.createElement("strong");
     brandName.textContent = "CONSTRUCTORA WM/M\u0026S";
     const brandSlogan = document.createElement("span");
@@ -492,7 +500,8 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     patchCalculations(doc, route);
     patchDataSync(doc, route);
     patchClock(doc);
-    injectFlowNav(doc, route);  // barra de flujo contextual
+    patchImageUploads(doc);
+    injectFlowNav(doc, route);
     syncDarkModeToIframe();
 
     // Attach global keyboard shortcuts inside iframe so Cmd+K works there too
@@ -618,19 +627,25 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   }
 
   function blockSlowResources(doc) {
-    // Eliminar Google Fonts duplicadas (cada módulo las carga 2 veces)
+    // Eliminar Google Fonts duplicadas
     const fontLinks = Array.from(doc.querySelectorAll('link[href*="fonts.googleapis.com"], link[href*="fonts.gstatic.com"]'));
     const seen = new Set();
     fontLinks.forEach(link => {
       const key = link.href.split('?')[0];
       if (seen.has(key)) { link.remove(); return; }
       seen.add(key);
-      // Hacer async para no bloquear render
       link.media = 'print';
       link.onload = () => { link.media = 'all'; };
     });
-    // Eliminar Tailwind CDN (ya tenemos estilos inyectados via ensureGlobalStyle)
+    // Eliminar Tailwind CDN
     doc.querySelectorAll('script[src*="cdn.tailwindcss.com"]').forEach(s => s.remove());
+    // Imágenes externas (Google AI, lh3.googleusercontent): lazy + async decode
+    doc.querySelectorAll('img[src*="googleusercontent"], img[src*="lh3.google"], img[src*="aida-public"]').forEach(img => {
+      img.setAttribute("loading", "lazy");
+      img.setAttribute("decoding", "async");
+      // Placeholder gris mientras carga
+      if (!img.style.background) img.style.background = "#323536";
+    });
   }
 
   function ensureGlobalStyle(doc) {
@@ -880,8 +895,10 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   }
 
   function normalizeLogo(doc) {
-    // Ensure the logo source is always a fresh root-relative URL
-    const logoSrc = LOGO_PATH + '?v=' + Date.now();
+    // Usar placeholder SVG instantáneo, luego lazy load del PNG real
+    const logoSrc = LOGO_PLACEHOLDER;
+    const logoReal = LOGO_PATH + '?v=1';
+
     Array.from(doc.querySelectorAll("img")).forEach((img) => {
       const label = `${img.alt || ""} ${img.getAttribute("data-alt") || ""}`.toLowerCase();
       if (!label.includes("logo") && !label.includes("constructora wm")) return;
@@ -889,6 +906,12 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       img.alt = "Logotipo CONSTRUCTORA WM/M&S";
       img.classList.add("wm-logo");
       img.dataset.wmLogo = "true";
+      // Lazy load real
+      if (logoSrc !== logoReal) {
+        const r = new Image();
+        r.onload = () => { img.src = logoReal; };
+        r.src = logoReal;
+      }
     });
 
     Array.from(doc.querySelectorAll("h1, a, strong")).forEach((element) => {
@@ -902,6 +925,11 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       logo.alt = "Logotipo CONSTRUCTORA WM/M&S";
       logo.className = "wm-logo";
       logo.dataset.wmLogo = "true";
+      if (logoSrc !== logoReal) {
+        const r = new Image();
+        r.onload = () => { logo.src = logoReal; };
+        r.src = logoReal;
+      }
       element.parentNode.insertBefore(wrapper, element);
       wrapper.append(logo, element);
     });
@@ -935,7 +963,7 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     loginOverlay.id = "wm-login-overlay";
     loginOverlay.innerHTML = `
       <div class="wm-login-card">
-        <img src="${LOGO_PATH}" alt="Logo CONSTRUCTORA WM/M&S" class="wm-logo">
+        <img src="${LOGO_PLACEHOLDER}" alt="Logo CONSTRUCTORA WM/M&S" class="wm-logo" id="wm-login-logo">
         <strong>CONSTRUCTORA WM/M&amp;S</strong>
         <span>Edificando el Futuro</span>
         <button id="wm-google-signin" type="button">
@@ -946,6 +974,12 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       </div>
     `;
     document.body.appendChild(loginOverlay);
+    // Lazy load logo real en pantalla de login
+    if (LOGO_PLACEHOLDER !== LOGO_PATH) {
+      const r = new Image();
+      r.onload = () => { const el = document.getElementById("wm-login-logo"); if (el) el.src = LOGO_PATH; };
+      r.src = LOGO_PATH;
+    }
 
     document.getElementById("wm-google-signin").addEventListener("click", async () => {
       const client = getSupabase();
@@ -2014,6 +2048,81 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     toast.textContent = message;
     window.clearTimeout(showFrameToast.timer);
     showFrameToast.timer = window.setTimeout(() => toast.remove(), 3500);
+  }
+
+  // ── Compresión automática de imágenes subidas por el usuario ──────────
+  // Se llama desde patchFrame para interceptar inputs type=file en iframes
+  function patchImageUploads(doc) {
+    Array.from(doc.querySelectorAll('input[type="file"]')).forEach(input => {
+      if (input.dataset.wmCompressed) return;
+      input.dataset.wmCompressed = "true";
+      input.addEventListener("change", async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+        const compressed = [];
+        for (const file of files) {
+          if (!file.type.startsWith("image/")) { compressed.push(file); continue; }
+          try {
+            const blob = await compressImage(file, { maxW: 1200, maxH: 1200, quality: 0.82 });
+            const newFile = new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" });
+            compressed.push(newFile);
+            const savedKB = ((file.size - blob.size) / 1024).toFixed(0);
+            if (savedKB > 0) showFrameToast(doc, `Imagen comprimida: ${(blob.size/1024).toFixed(0)} KB (ahorro: ${savedKB} KB)`);
+          } catch(err) {
+            compressed.push(file);
+          }
+        }
+        // Reemplazar el FileList con los archivos comprimidos
+        const dt = new DataTransfer();
+        compressed.forEach(f => dt.items.add(f));
+        input.files = dt.files;
+      });
+    });
+  }
+
+  // Comprime una imagen usando Canvas API
+  function compressImage(file, { maxW = 1200, maxH = 1200, quality = 0.82 } = {}) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        // Escalar manteniendo proporción
+        if (width > maxW || height > maxH) {
+          const ratio = Math.min(maxW / width, maxH / height);
+          width  = Math.round(width  * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width  = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else reject(new Error("Canvas toBlob failed"));
+        }, "image/webp", quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
+      img.src = url;
+    });
+  }
+
+  // ── Subir imagen comprimida a Supabase Storage ───────────────────────
+  async function uploadImageToSupabase(file, bucket = "documents", folder = "uploads") {
+    const client = await getAuthedClient();
+    if (!client) return null;
+    const ext  = file.name.split(".").pop();
+    const name = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { data, error } = await client.storage.from(bucket).upload(name, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type
+    });
+    if (error) { console.error("Storage upload error", error); return null; }
+    const { data: { publicUrl } } = client.storage.from(bucket).getPublicUrl(name);
+    return publicUrl;
   }
 
   async function init() {
