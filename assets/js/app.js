@@ -1,4 +1,4 @@
-// CSS is loaded via <link> tags in index.html — no imports needed here
+﻿// CSS is loaded via <link> tags in index.html — no imports needed here
 // Fixed logo path to use direct public path to avoid Vite asset hashing issues
 // Use root-relative paths for all assets to ensure consistency across environments
 const STITCH_ROOT = "/src/components/stitch";
@@ -9,25 +9,32 @@ const AFTER_LOGIN_ROUTE = "dashboard";
 (function () {
   "use strict";
 
+  // Rutas visibles en el sidebar — solo pantallas principales
   const routes = [
-    { id: "dashboard", label: "Tablero", icon: "dashboard", path: `${STITCH_ROOT}/tablero_de_control_principal_3/code.html`, group: "Inicio" },
-    { id: "clients", label: "Proyectos y clientes", icon: "groups", path: `${STITCH_ROOT}/gesti_n_de_clientes_y_proyectos/code.html`, group: "Comercial" },
-    { id: "client-apu", label: "Cliente a APU", icon: "auto_awesome", path: `${STITCH_ROOT}/gesti_n_de_clientes_y_conversi_n_a_apu/code.html`, group: "Comercial" },
-    { id: "apu", label: "Presupuestos APU", icon: "calculate", path: `${STITCH_ROOT}/calculadora_de_costos_y_apu_avanzada/code.html`, group: "Presupuestos" },
-    { id: "apu-advanced", label: "Desglose APU", icon: "construction", path: `${STITCH_ROOT}/calculadora_de_apu_avanzada_con_filtros_y_concertina_6/code.html`, group: "Presupuestos" },
-    { id: "tracking", label: "Seguimiento", icon: "query_stats", path: `${STITCH_ROOT}/seguimiento_f_sico_financiero_de_proyectos_2/code.html`, group: "Seguimiento" },
-    { id: "alerts", label: "Alertas", icon: "notifications_active", path: `${STITCH_ROOT}/seguimiento_de_proyectos_con_alertas_2/code.html`, group: "Seguimiento" },
-    { id: "schedule", label: "Cronograma", icon: "calendar_month", path: `${STITCH_ROOT}/cronograma_de_proyecto_automatizado/code.html`, group: "Seguimiento" },
-    { id: "multichannel", label: "Cronograma y alertas", icon: "campaign", path: `${STITCH_ROOT}/cronograma_y_alertas_multicanal/code.html`, group: "Seguimiento" },
-    { id: "operations", label: "Finanzas y gastos", icon: "receipt_long", path: `${STITCH_ROOT}/control_operativo_planilla_y_gastos_6/code.html`, group: "Finanzas" },
-    { id: "apu-report", label: "Informe APU", icon: "picture_as_pdf", path: `${STITCH_ROOT}/vista_de_exportaci_n_de_informe_apu_3/code.html`, group: "Reportes" },
-    { id: "client-summary", label: "Resumen cliente", icon: "summarize", path: `${STITCH_ROOT}/resumen_de_presupuesto_para_cliente_3/code.html`, group: "Reportes" },
-    { id: "assistant", label: "Asistente APU", icon: "psychology", path: `${STITCH_ROOT}/asistente_de_conversi_n_a_apu/code.html`, group: "Herramientas" },
-    { id: "mobile-alerts", label: "Vista movil", icon: "phone_iphone", path: `${STITCH_ROOT}/alertas_y_cronograma_m_vil/code.html`, group: "Herramientas" },
-    { id: "management", label: "Sistema general", icon: "domain", path: `${STITCH_ROOT}/constructora_wm_m_s_management_system/code.html`, group: "Sistema" }
+    { id: "dashboard",      label: "Tablero",             icon: "dashboard",          path: `${STITCH_ROOT}/tablero_de_control_principal_3/code.html`,                          group: "Inicio" },
+    { id: "clients",        label: "Proyectos y clientes", icon: "groups",             path: `${STITCH_ROOT}/gesti_n_de_clientes_y_proyectos/code.html`,                         group: "Comercial" },
+    { id: "apu",            label: "Presupuestos APU",     icon: "calculate",          path: `${STITCH_ROOT}/calculadora_de_costos_y_apu_avanzada/code.html`,                    group: "Presupuestos" },
+    { id: "apu-advanced",   label: "Desglose APU",         icon: "construction",       path: `${STITCH_ROOT}/calculadora_de_apu_avanzada_con_filtros_y_concertina_6/code.html`,  group: "Presupuestos" },
+    { id: "tracking",       label: "Seguimiento",          icon: "query_stats",        path: `${STITCH_ROOT}/seguimiento_f_sico_financiero_de_proyectos_2/code.html`,            group: "Seguimiento" },
+    { id: "alerts",         label: "Alertas",              icon: "notifications_active", path: `${STITCH_ROOT}/seguimiento_de_proyectos_con_alertas_2/code.html`,               group: "Seguimiento" },
+    { id: "schedule",       label: "Cronograma",           icon: "calendar_month",     path: `${STITCH_ROOT}/cronograma_de_proyecto_automatizado/code.html`,                     group: "Seguimiento" },
+    { id: "operations",     label: "Finanzas y gastos",    icon: "receipt_long",       path: `${STITCH_ROOT}/control_operativo_planilla_y_gastos_6/code.html`,                   group: "Finanzas" },
+    { id: "apu-report",     label: "Informe APU",          icon: "picture_as_pdf",     path: `${STITCH_ROOT}/vista_de_exportaci_n_de_informe_apu_3/code.html`,                   group: "Reportes" },
+    { id: "client-summary", label: "Resumen cliente",      icon: "summarize",          path: `${STITCH_ROOT}/resumen_de_presupuesto_para_cliente_3/code.html`,                   group: "Reportes" },
   ];
 
-  const routeById = new Map(routes.map((route) => [route.id, route]));
+  // Rutas internas — accesibles via botones de acción, no aparecen en el sidebar
+  const internalRoutes = [
+    { id: "client-apu",    label: "Cliente a APU",       icon: "auto_awesome",  path: `${STITCH_ROOT}/gesti_n_de_clientes_y_conversi_n_a_apu/code.html` },
+    { id: "assistant",     label: "Asistente APU",       icon: "psychology",    path: `${STITCH_ROOT}/asistente_de_conversi_n_a_apu/code.html` },
+    { id: "mobile-alerts", label: "Vista móvil alertas",  icon: "phone_iphone",  path: `${STITCH_ROOT}/alertas_y_cronograma_m_vil/code.html` },
+    { id: "multichannel",  label: "Cronograma y alertas", icon: "campaign",      path: `${STITCH_ROOT}/cronograma_y_alertas_multicanal/code.html` },
+    { id: "management",    label: "Sistema general",     icon: "domain",        path: `${STITCH_ROOT}/constructora_wm_m_s_management_system/code.html` },
+  ];
+
+  const allRoutes = [...routes, ...internalRoutes];
+
+  const routeById = new Map(allRoutes.map((route) => [route.id, route]));
   const moduleCache = new Map(); // Cache de iframes precargados
   let iframe = null;
   let nav = null;
