@@ -159,12 +159,11 @@ const AFTER_LOGIN_ROUTE = "dashboard";
 
     const loader = document.getElementById("wm-loader-overlay");
 
-    // Si el módulo está en cache, cargarlo instantáneamente
+    // Si el módulo está en cache, cargarlo y re-parchear
     if (moduleCache.has(route.id)) {
       if (loader) loader.classList.remove("active");
       iframe.classList.remove("loading");
-      const cached = moduleCache.get(route.id);
-      iframe.srcdoc = cached;
+      iframe.src = route.path; // Recargar desde path para que patchFrame se dispare
       title.textContent = route.label;
     } else {
       if (loader) loader.classList.add("active");
@@ -178,8 +177,8 @@ const AFTER_LOGIN_ROUTE = "dashboard";
         // Suprimir Tailwind CDN warning
         const twScript = iframeDoc.querySelector('script[src*="cdn.tailwindcss.com"]');
         if (twScript) twScript.removeAttribute("src");
-        // Guardar en cache el HTML procesado
-        try { moduleCache.set(route.id, iframeDoc.documentElement.outerHTML); } catch(e) {}
+        // Guardar ruta en cache (solo marca que fue visitada)
+        try { moduleCache.set(route.id, true); } catch(e) {}
         syncDarkModeToIframe();
         if (loader) loader.classList.remove("active");
         iframe.classList.remove("loading");
@@ -233,11 +232,14 @@ const AFTER_LOGIN_ROUTE = "dashboard";
 
     const brand = document.createElement("section");
     brand.className = "app-brand";
-    brand.innerHTML = [
-      `<img src="${LOGO_PATH}" alt="Logotipo CONSTRUCTORA WM/M&S">`,
-      "<strong>CONSTRUCTORA WM/M&amp;S</strong>",
-      "<span>Edificando el Futuro</span>"
-    ].join("");
+    const brandImg = document.createElement("img");
+    brandImg.src = LOGO_PATH;
+    brandImg.alt = "Logotipo CONSTRUCTORA WM/M&S";
+    const brandName = document.createElement("strong");
+    brandName.textContent = "CONSTRUCTORA WM/M\u0026S";
+    const brandSlogan = document.createElement("span");
+    brandSlogan.textContent = "Edificando el Futuro";
+    brand.append(brandImg, brandName, brandSlogan);
 
     nav = document.createElement("nav");
     nav.className = "app-nav";
@@ -460,20 +462,17 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     if (!doc) return;
     const route = currentRouteId();
 
-    // Suppress Tailwind CDN production warning before any script runs
+    // Suppress Tailwind CDN production warning — override console.warn safely
     try {
-      const suppressScript = doc.createElement("script");
-      suppressScript.textContent = `
-        (function(){
-          var _warn = console.warn.bind(console);
-          console.warn = function() {
-            var msg = Array.prototype.join.call(arguments, ' ');
-            if (msg.indexOf('cdn.tailwindcss.com') !== -1) return;
-            _warn.apply(console, arguments);
-          };
-        })();
-      `;
-      doc.head.insertBefore(suppressScript, doc.head.firstChild);
+      const iframeWin = iframe.contentWindow;
+      if (iframeWin && !iframeWin.__wmWarnPatched) {
+        const _warn = iframeWin.console.warn.bind(iframeWin.console);
+        iframeWin.console.warn = (...args) => {
+          if (String(args[0] || "").includes("cdn.tailwindcss.com")) return;
+          _warn(...args);
+        };
+        iframeWin.__wmWarnPatched = true;
+      }
     } catch(e) {}
 
     // Hide loader smoothly
@@ -542,12 +541,8 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       link.media = 'print';
       link.onload = () => { link.media = 'all'; };
     });
-    // Eliminar Tailwind CDN completamente (ya tenemos estilos inyectados)
+    // Eliminar Tailwind CDN (ya tenemos estilos inyectados via ensureGlobalStyle)
     doc.querySelectorAll('script[src*="cdn.tailwindcss.com"]').forEach(s => s.remove());
-    // Eliminar scripts no necesarios
-    doc.querySelectorAll('script:not(#tailwind-config):not([type="module"])').forEach(s => {
-      if (s.src && !s.src.includes('tailwind')) s.remove();
-    });
   }
 
   function ensureGlobalStyle(doc) {
@@ -1682,7 +1677,7 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     const csv = [
       "modulo,moneda,total",
       "CONSTRUCTORA WM/M&S,Q,0.00"
-    ].join("\\n");
+    ].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
