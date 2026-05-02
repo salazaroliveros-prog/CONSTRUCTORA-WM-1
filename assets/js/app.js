@@ -65,10 +65,15 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   async function getAuthedClient() {
     const client = getSupabase();
     if (!client) return null;
-    if (currentSession?.access_token) return client;
-    const { data: { session } } = await client.auth.getSession();
-    if (session) { currentSession = session; return client; }
-    return null;
+    // Siempre refrescar sesión para garantizar token válido
+    try {
+      const { data: { session }, error } = await client.auth.getSession();
+      if (error || !session) return null;
+      currentSession = session;
+      return client;
+    } catch(e) {
+      return null;
+    }
   }
 
   function isConfigured() {
@@ -722,7 +727,10 @@ const AFTER_LOGIN_ROUTE = "dashboard";
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
       }
-      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      table { width: 100%; border-collapse: collapse; table-layout: auto; }
+      td, th { overflow-wrap: break-word; word-break: break-word; }
+      main .sticky { top: 8px !important; }
+      table input[type="text"] { width: 72px !important; min-width: 0; }
 
       /* ── Imágenes y SVG: no rebosar ── */
       img, svg, canvas { max-width: 100%; height: auto; }
