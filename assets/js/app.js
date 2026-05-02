@@ -510,6 +510,149 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     });
   }
 
+  // ── Barra de flujo contextual ────────────────────────────────
+  function injectFlowNav(doc, route) {
+    if (route === "dashboard" || doc.getElementById("wm-flow-nav")) return;
+    const flowMap = {
+      "clients":       { prev:"dashboard", next:"apu",          prevLabel:"Tablero",        nextLabel:"Presupuestos APU" },
+      "client-apu":    { prev:"clients",   next:"apu",          prevLabel:"Clientes",        nextLabel:"Presupuestos APU" },
+      "apu":           { prev:"clients",   next:"apu-advanced", prevLabel:"Clientes",        nextLabel:"Desglose APU" },
+      "apu-advanced":  { prev:"apu",       next:"tracking",     prevLabel:"Presupuesto APU", nextLabel:"Seguimiento" },
+      "tracking":      { prev:"apu",       next:"operations",   prevLabel:"Presupuesto APU", nextLabel:"Finanzas y gastos" },
+      "alerts":        { prev:"tracking",  next:"operations",   prevLabel:"Seguimiento",     nextLabel:"Finanzas y gastos" },
+      "schedule":      { prev:"tracking",  next:"operations",   prevLabel:"Seguimiento",     nextLabel:"Finanzas y gastos" },
+      "multichannel":  { prev:"schedule",  next:"operations",   prevLabel:"Cronograma",      nextLabel:"Finanzas y gastos" },
+      "operations":    { prev:"tracking",  next:"dashboard",    prevLabel:"Seguimiento",     nextLabel:"Tablero" },
+      "apu-report":    { prev:"apu",       next:"client-summary", prevLabel:"APU",           nextLabel:"Resumen cliente" },
+      "client-summary":{ prev:"apu-report",next:"dashboard",    prevLabel:"Informe APU",     nextLabel:"Tablero" },
+      "assistant":     { prev:"apu",       next:"apu-advanced", prevLabel:"Presupuesto APU", nextLabel:"Desglose APU" },
+      "mobile-alerts": { prev:"alerts",    next:"dashboard",    prevLabel:"Alertas",         nextLabel:"Tablero" },
+      "management":    { prev:"dashboard", next:"dashboard",    prevLabel:"Tablero",         nextLabel:"Tablero" },
+    };
+    const flow = flowMap[route];
+    if (!flow) return;
+    const style = doc.createElement("style");
+    style.textContent = "#wm-flow-nav{position:fixed;bottom:0;left:0;right:0;z-index:9000;display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:rgba(26,43,68,.96);backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,.1);gap:8px}.wm-flow-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#e5e7eb;border-radius:6px!important;padding:6px 12px;font:600 12px/1 Inter,sans-serif;cursor:pointer;transition:background .15s}.wm-flow-btn:hover{background:rgba(255,255,255,.2)}.wm-flow-btn.primary{background:#e9c176;border-color:#e9c176;color:#1a2b44}.wm-flow-btn.primary:hover{background:#f0d090}.wm-flow-center{font:500 11px/1 Inter,sans-serif;color:rgba(255,255,255,.5);text-align:center;flex:1}body{padding-bottom:52px!important}";
+    doc.head.appendChild(style);
+    const bar = doc.createElement("div");
+    bar.id = "wm-flow-nav";
+    const prev = doc.createElement("button");
+    prev.className = "wm-flow-btn";
+    prev.textContent = "<- " + flow.prevLabel;
+    prev.addEventListener("click", () => navigate(flow.prev));
+    const center = doc.createElement("span");
+    center.className = "wm-flow-center";
+    center.textContent = "CONSTRUCTORA WM/M&S";
+    const next = doc.createElement("button");
+    next.className = "wm-flow-btn primary";
+    next.textContent = flow.nextLabel + " ->";
+    next.addEventListener("click", () => navigate(flow.next));
+    bar.append(prev, center, next);
+    doc.body.appendChild(bar);
+  }
+
+  // ── Formulario rapido de ingresos/gastos en el dashboard ─────
+  function injectDashboardQuickEntry(doc) {
+    if (doc.getElementById("wm-quick-entry")) return;
+    const style = doc.createElement("style");
+    style.textContent = "#wm-quick-entry{position:fixed;bottom:0;left:0;right:0;z-index:8500;background:rgba(26,43,68,.97);backdrop-filter:blur(12px);border-top:2px solid #e9c176;padding:12px 16px;display:none;flex-direction:column;gap:10px}#wm-quick-entry.open{display:flex}#wm-qe-toggle{position:fixed;bottom:16px;right:72px;z-index:8600;background:#e9c176;color:#1a2b44;border:none;border-radius:50%;width:48px;height:48px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}.wm-qe-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:end}.wm-qe-row label{font:600 10px/1 Inter,sans-serif;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px}.wm-qe-row input,.wm-qe-row select{width:100%;padding:7px 9px;border:1px solid rgba(255,255,255,.2);border-radius:6px;background:rgba(255,255,255,.08);color:#fff;font:400 13px/1 Inter,sans-serif}.wm-qe-row input::placeholder{color:rgba(255,255,255,.35)}.wm-qe-row select option{background:#1a2b44;color:#fff}#wm-qe-save{background:#e9c176;color:#1a2b44;border:none;border-radius:6px;padding:8px 16px;font:700 13px/1 Inter,sans-serif;cursor:pointer;white-space:nowrap;height:36px}#wm-qe-type-row{display:flex;gap:8px;align-items:center}.wm-qe-type-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.6);font:600 11px/1 Inter,sans-serif;cursor:pointer;transition:all .15s}.wm-qe-type-btn.active-ingreso{background:#22c55e;border-color:#22c55e;color:#fff}.wm-qe-type-btn.active-gasto{background:#ef4444;border-color:#ef4444;color:#fff}#wm-qe-proj-select{padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:400 12px/1 Inter,sans-serif}#wm-qe-proj-select option{background:#1a2b44}";
+    doc.head.appendChild(style);
+    const toggle = doc.createElement("button");
+    toggle.id = "wm-qe-toggle";
+    toggle.title = "Registro rapido (Ctrl+E)";
+    toggle.innerHTML = '<span class="material-symbols-outlined" style="font-size:22px">add_circle</span>';
+    doc.body.appendChild(toggle);
+    const cats = ["Materiales","Mano de Obra","Herramienta","Sub-contrato","Administrativo","Personal","Transporte","Fijos","Hogar","Aporte","Trabajos Extra"].map(c => '<option value="' + c + '">' + c + '</option>').join("");
+    const panel = doc.createElement("div");
+    panel.id = "wm-quick-entry";
+    panel.innerHTML = '<div id="wm-qe-type-row"><span style="font:700 12px/1 Inter,sans-serif;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.05em">Registro rapido:</span><button class="wm-qe-type-btn active-ingreso" id="wm-qe-ingreso">Ingreso</button><button class="wm-qe-type-btn" id="wm-qe-gasto">Gasto</button><select id="wm-qe-proj-select"><option value="">Proyecto...</option></select><span style="margin-left:auto;font:400 11px/1 Inter,sans-serif;color:rgba(255,255,255,.4)">Ctrl+E</span></div><div class="wm-qe-row"><div><label>Descripcion</label><input id="wm-qe-desc" placeholder="Cemento, planilla..." type="text"/></div><div><label>Cantidad</label><input id="wm-qe-qty" placeholder="1" type="number" min="0" step="any" value="1"/></div><div><label>Costo unit. (Q)</label><input id="wm-qe-unit" placeholder="0.00" type="number" min="0" step="any"/></div><div><label>Costo total (Q)</label><input id="wm-qe-total" placeholder="0.00" type="number" min="0" step="any" readonly/></div><div><label>Categoria</label><select id="wm-qe-cat">' + cats + '</select></div><div><label>Fecha</label><input id="wm-qe-date" type="date"/></div><button id="wm-qe-save">Guardar</button></div>';
+    doc.body.appendChild(panel);
+    panel.querySelector("#wm-qe-date").value = new Date().toISOString().slice(0,10);
+    let entryType = "ingreso";
+    panel.querySelector("#wm-qe-ingreso").addEventListener("click", () => { entryType="ingreso"; panel.querySelector("#wm-qe-ingreso").className="wm-qe-type-btn active-ingreso"; panel.querySelector("#wm-qe-gasto").className="wm-qe-type-btn"; });
+    panel.querySelector("#wm-qe-gasto").addEventListener("click", () => { entryType="gasto"; panel.querySelector("#wm-qe-gasto").className="wm-qe-type-btn active-gasto"; panel.querySelector("#wm-qe-ingreso").className="wm-qe-type-btn"; });
+    const qtyEl=panel.querySelector("#wm-qe-qty"), ucEl=panel.querySelector("#wm-qe-unit"), totEl=panel.querySelector("#wm-qe-total");
+    const calc=()=>{ totEl.value=(parseFloat(qtyEl.value||0)*parseFloat(ucEl.value||0)).toFixed(2); };
+    qtyEl.addEventListener("input",calc); ucEl.addEventListener("input",calc);
+    toggle.addEventListener("click", () => panel.classList.toggle("open"));
+    doc.addEventListener("keydown", e => { if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="e") { e.preventDefault(); panel.classList.toggle("open"); } });
+    (async () => {
+      const client = await getAuthedClient();
+      if (!client) return;
+      const { data } = await client.from("projects").select("id,name").limit(50).catch(() => ({ data:[] }));
+      const sel = panel.querySelector("#wm-qe-proj-select");
+      (data||[]).forEach(p => { const o=doc.createElement("option"); o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
+    })();
+    panel.querySelector("#wm-qe-save").addEventListener("click", async () => {
+      const desc=panel.querySelector("#wm-qe-desc").value.trim();
+      const qty=parseFloat(qtyEl.value||1), uc=parseFloat(ucEl.value||0);
+      const total=parseFloat(totEl.value||0)||qty*uc;
+      const cat=panel.querySelector("#wm-qe-cat").value;
+      const date=panel.querySelector("#wm-qe-date").value;
+      const projId=panel.querySelector("#wm-qe-proj-select").value||null;
+      if (!desc) { showFrameToast(doc,"Ingresa una descripcion."); return; }
+      const client=await getAuthedClient();
+      if (client) {
+        if (entryType==="gasto") {
+          const {error}=await client.from("expenses").insert([{description:desc,amount:total,date,category:normalizeExpenseCategory(cat)}]);
+          if (error) { showFrameToast(doc,formatDataError(error)); return; }
+        } else {
+          const {error}=await client.from("project_tracking").insert([{project_id:projId,income:total,expenses_total:0,physical_pct:0,financial_pct:0,snapshot_date:date,notes:desc}]);
+          if (error) { showFrameToast(doc,formatDataError(error)); return; }
+        }
+      }
+      showFrameToast(doc,(entryType==="ingreso"?"Ingreso":"Gasto")+" registrado: Q "+total.toFixed(2));
+      panel.querySelector("#wm-qe-desc").value=""; qtyEl.value="1"; ucEl.value=""; totEl.value="";
+      panel.classList.remove("open");
+      setTimeout(()=>patchDataSync(doc,"dashboard"),600);
+    });
+  }
+
+  // ── Calendario interactivo del dashboard ─────────────────────
+  function injectInteractiveCalendar(doc) {
+    if (doc.getElementById("wm-cal-style")) return;
+    const style=doc.createElement("style"); style.id="wm-cal-style";
+    style.textContent=".wm-cal-day{cursor:pointer;position:relative;transition:background .15s;border-radius:4px}.wm-cal-day:hover{background:rgba(26,43,68,.12)!important}.wm-cal-day.has-event::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:5px;height:5px;background:#e9c176;border-radius:50%}#wm-cal-modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:8500;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center}#wm-cal-modal.open{display:flex}#wm-cal-inner{background:#fff;border-radius:12px;padding:24px;width:100%;max-width:360px;box-shadow:0 24px 64px rgba(15,23,42,.24)}#wm-cal-inner h3{font:700 15px/1 Inter,sans-serif;color:#1a2b44;margin-bottom:14px}#wm-cal-inner input,#wm-cal-inner select{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font:400 13px/1 Inter,sans-serif;margin-bottom:10px;background:#f8fafc;color:#172033}#wm-cal-save{width:100%;padding:10px;background:#1a2b44;color:#fff;border:none;border-radius:6px;font:700 13px/1 Inter,sans-serif;cursor:pointer}#wm-cal-cancel{background:transparent;border:none;color:#64748b;font:600 12px/1 Inter,sans-serif;cursor:pointer;margin-top:8px;width:100%}";
+    doc.head.appendChild(style);
+    const modal=doc.createElement("div"); modal.id="wm-cal-modal";
+    modal.innerHTML='<div id="wm-cal-inner"><h3 id="wm-cal-title">Nueva Actividad</h3><input id="wm-cal-name" placeholder="Nombre de la actividad" type="text"/><input id="wm-cal-date" type="date"/><select id="wm-cal-type"><option value="site_visit">Visita de Obra</option><option value="deadline">Fecha Limite</option><option value="meeting">Reunion</option><option value="payment">Pago</option></select><button id="wm-cal-save">Guardar Actividad</button><button id="wm-cal-cancel">Cancelar</button></div>';
+    doc.body.appendChild(modal);
+    modal.querySelector("#wm-cal-cancel").addEventListener("click",()=>modal.classList.remove("open"));
+    modal.addEventListener("click",e=>{if(e.target===modal)modal.classList.remove("open");});
+    modal.querySelector("#wm-cal-save").addEventListener("click",async()=>{
+      const name=modal.querySelector("#wm-cal-name").value.trim();
+      const date=modal.querySelector("#wm-cal-date").value;
+      if(!name||!date){showFrameToast(doc,"Completa nombre y fecha.");return;}
+      const client=await getAuthedClient();
+      if(client) await client.from("milestones").insert([{name,due_date:date,status:"Pending"}]).catch(()=>{});
+      const day=date.split("-")[2]?.replace(/^0/,"");
+      doc.querySelectorAll(".wm-cal-day").forEach(d=>{if((d.textContent||"").trim()===day)d.classList.add("has-event");});
+      showFrameToast(doc,'Actividad "'+name+'" programada.');
+      modal.classList.remove("open"); modal.querySelector("#wm-cal-name").value="";
+    });
+    doc.querySelectorAll(".grid.grid-cols-7 > div").forEach(dayEl=>{
+      const txt=(dayEl.textContent||"").trim();
+      if(!/^\d+$/.test(txt)||parseInt(txt)>31)return;
+      dayEl.classList.add("wm-cal-day");
+      dayEl.addEventListener("click",()=>{
+        const today=new Date(), d=txt.padStart(2,"0"), m=String(today.getMonth()+1).padStart(2,"0");
+        modal.querySelector("#wm-cal-date").value=today.getFullYear()+"-"+m+"-"+d;
+        modal.querySelector("#wm-cal-title").textContent="Nueva Actividad - "+d+"/"+m+"/"+today.getFullYear();
+        modal.classList.add("open");
+      });
+    });
+  }
+
+  // ── Boton Salir en el dashboard ───────────────────────────────
+  function injectDashboardLogout(doc) {
+    if (doc.getElementById("wm-dash-logout")) return;
+    const btn=doc.createElement("button"); btn.id="wm-dash-logout";
+    btn.style.cssText="position:fixed;top:12px;right:16px;z-index:7000;background:rgba(186,26,26,.9);color:#fff;border:none;border-radius:6px;padding:7px 14px;font:700 12px/1 Inter,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;backdrop-filter:blur(4px)";
+    btn.innerHTML='<span class="material-symbols-outlined" style="font-size:16px">logout</span>Salir';
+    btn.addEventListener("click",async()=>{const client=getSupabase();if(client)await client.auth.signOut();currentSession=null;showLoginScreen();});
+    doc.body.appendChild(btn);
+  }
+
   // ── Live clock injected into every module that shows a time element ──
   function patchClock(doc) {
     const clockEl = doc.querySelector(".font-data-label.tracking-widest, [class*='tracking-widest']" );
@@ -1549,48 +1692,273 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   async function patchDataSync(doc, route) {
     const client = await getAuthedClient();
     if (!client) return;
-
     prepareKnownForms(doc, route);
     ensureModulePersistActions(doc, route, client);
 
+    // ── Dashboard: KPIs reales ──
     if (route === "dashboard") {
       try {
-        const [{ count: projectCount }, { count: clientCount }, { data: expenses }] = await Promise.all([
-          client.from("projects").select("id", { count: "exact", head: true }),
-          client.from("clients").select("id", { count: "exact", head: true }),
-          client.from("expenses").select("amount").limit(500)
+        const [{count:projCount},{count:clientCount},{data:expenses},{data:tracking},{data:projects}] = await Promise.all([
+          client.from("projects").select("id",{count:"exact",head:true}),
+          client.from("clients").select("id",{count:"exact",head:true}),
+          client.from("expenses").select("amount,date").order("date",{ascending:false}).limit(500),
+          client.from("project_tracking").select("physical_pct,financial_pct,income,expenses_total,snapshot_date").order("snapshot_date",{ascending:false}).limit(20),
+          client.from("projects").select("name,status,total_budget,financial_deployed").limit(10)
         ]);
-        updateMetricNearLabel(doc, /total de proyectos|proyectos/i, projectCount ?? 0);
-        updateMetricNearLabel(doc, /clientes|cartera/i, clientCount ?? 0);
-        const totalExpenses = (expenses || []).reduce((sum, item) => sum + parseNumber(item.amount), 0);
-        if (totalExpenses > 0) {
-          updateMetricNearLabel(doc, /gastos|expenses/i, `Q ${totalExpenses.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        // KPI 1: Total proyectos
+        const kpi1 = doc.querySelector(".font-h1.text-h1.text-primary");
+        if (kpi1) kpi1.textContent = String(projCount ?? 0);
+        // KPI 2: Presupuesto activo
+        const totalBudget = (projects||[]).reduce((s,p)=>s+parseNumber(p.total_budget),0);
+        const kpi2 = doc.querySelector(".font-h1.text-h1.text-on-tertiary-fixed");
+        if (kpi2) kpi2.textContent = totalBudget>=1000000 ? "Q"+(totalBudget/1000000).toFixed(1)+"M" : "Q"+totalBudget.toLocaleString("es-GT",{minimumFractionDigits:0});
+        // KPI 3: Progreso promedio
+        const avgPhys = tracking&&tracking.length>0 ? Math.round(tracking.reduce((s,r)=>s+parseNumber(r.physical_pct),0)/tracking.length) : 0;
+        const allKpi = Array.from(doc.querySelectorAll(".col-span-3"));
+        const progKpi = allKpi.find(el=>/progreso promedio/i.test(el.textContent||""));
+        if (progKpi) { const v=progKpi.querySelector(".font-h1"); if(v)v.textContent=avgPhys+"%"; const b=progKpi.querySelector(".bg-primary.h-full.rounded-full"); if(b)b.style.width=avgPhys+"%"; }
+        // Grafica Ingresos vs Gastos
+        if (tracking&&tracking.length>0) {
+          const byMonth={};
+          tracking.forEach(t=>{const m=(t.snapshot_date||"").slice(0,7);if(!byMonth[m])byMonth[m]={income:0,expenses:0};byMonth[m].income+=parseNumber(t.income);byMonth[m].expenses+=parseNumber(t.expenses_total);});
+          const months=Object.keys(byMonth).sort().slice(-4);
+          const maxV=Math.max(...months.map(m=>Math.max(byMonth[m].income,byMonth[m].expenses)),1);
+          const chartContainer=Array.from(doc.querySelectorAll(".flex-1.flex.items-end")).find(el=>el.querySelectorAll(".w-8").length>=2);
+          const groups=chartContainer?Array.from(chartContainer.querySelectorAll(".flex-1.flex.justify-center.items-end")):Array.from(doc.querySelectorAll(".flex-1.flex.justify-center.items-end.gap-1"));
+          const monthNames=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+          months.forEach((m,i)=>{const g=groups[i];if(!g)return;const bars=g.querySelectorAll(".w-8");const ip=Math.round((byMonth[m].income/maxV)*85)+10;const ep=Math.round((byMonth[m].expenses/maxV)*85)+10;if(bars[0])bars[0].style.height=ip+"%";if(bars[1])bars[1].style.height=ep+"%";});
+          const xLabels=doc.querySelectorAll(".flex.justify-between.mt-3 span");
+          months.forEach((m,i)=>{if(xLabels[i])xLabels[i].textContent=monthNames[parseInt(m.slice(5,7))-1];});
         }
-      } catch(e) {
-        console.error("Supabase sync error", e);
-        setStatus(formatDataError(e));
-      }
+        // Grafica Salud
+        if (tracking&&tracking.length>0) {
+          const lt=tracking[0], physP=parseNumber(lt.physical_pct), finP=parseNumber(lt.financial_pct), varP=Math.abs(physP-finP);
+          const hRows=Array.from(doc.querySelectorAll(".w-full.bg-surface-variant.rounded-full.overflow-hidden"));
+          const pcts=[physP,varP,finP], bClasses=["bg-primary","bg-tertiary-container","bg-surface-tint"];
+          hRows.slice(0,3).forEach((row,i)=>{const b=row.querySelector("."+bClasses[i])||row.querySelector("div");if(b)b.style.width=pcts[i]+"%";});
+          const hVals=Array.from(doc.querySelectorAll(".font-semibold")).filter(el=>/^\d+%$/.test((el.textContent||"").trim()));
+          if(hVals[0])hVals[0].textContent=physP+"%"; if(hVals[1])hVals[1].textContent=varP+"%"; if(hVals[2])hVals[2].textContent=finP+"%";
+        }
+        // KPI 4: Proximo hito
+        try {
+          const {data:milestones}=await client.from("milestones").select("name,due_date").gte("due_date",new Date().toISOString().slice(0,10)).order("due_date",{ascending:true}).limit(1);
+          if(milestones&&milestones[0]){const m=milestones[0];const kpi4=doc.querySelector(".font-h3.text-\\[20px\\]");if(kpi4)kpi4.textContent=m.name;const dL=Math.ceil((new Date(m.due_date)-new Date())/86400000);const kpi4s=doc.querySelector(".text-error.mt-2 .font-caption");if(kpi4s)kpi4s.textContent=dL<=0?"Vencido":"Vence en "+dL+" dia"+(dL!==1?"s":"");}
+        } catch(e){}
+      } catch(e){console.error("Dashboard sync",e);setStatus(formatDataError(e));}
     }
 
-    Array.from(doc.querySelectorAll("form")).forEach((form) => {
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn ? submitBtn.textContent : '';
-        if (submitBtn) submitBtn.textContent = 'Guardando...';
-        try {
-          const message = route === "operations"
-            ? await saveExpenseForm(form, client)
-            : await saveClientForm(doc, form, client);
-          showFrameToast(doc, message);
-          form.reset();
-        } catch (error) {
-          showFrameToast(doc, `Error al guardar: ${formatDataError(error)}`);
-        } finally {
-          if (submitBtn) submitBtn.textContent = originalText;
+    // ── Seguimiento: tabla y graficas reales ──
+    if (route === "tracking") {
+      try {
+        const {data:trackingData}=await client.from("project_tracking").select("project_id,physical_pct,financial_pct,income,expenses_total,snapshot_date").order("snapshot_date",{ascending:false}).limit(50);
+        const {data:projectsData}=await client.from("projects").select("id,name,status,total_budget,financial_deployed").limit(20);
+        if(!trackingData||trackingData.length===0)return;
+        const latestByProj={};
+        trackingData.forEach(t=>{if(!latestByProj[t.project_id])latestByProj[t.project_id]=t;});
+        const totalDeployed=Object.values(latestByProj).reduce((s,t)=>s+parseNumber(t.income),0);
+        const kpiD=doc.querySelector(".font-h2.text-h2.text-primary-container");
+        if(kpiD)kpiD.textContent="Q "+totalDeployed.toLocaleString("es-GT",{minimumFractionDigits:2});
+        const chartGroups=Array.from(doc.querySelectorAll(".flex.flex-col.items-center.gap-2.flex-1"));
+        Object.values(latestByProj).slice(0,4).forEach((t,i)=>{
+          if(!chartGroups[i])return;
+          const bars=chartGroups[i].querySelectorAll(".w-1\\/3");
+          const ph=Math.max(5,Math.round(parseNumber(t.physical_pct))), fh=Math.max(5,Math.round(parseNumber(t.financial_pct)));
+          if(bars[0])bars[0].style.height=ph+"%"; if(bars[1])bars[1].style.height=fh+"%";
+          const lbl=chartGroups[i].querySelector(".font-caption.text-secondary");
+          const proj=projectsData?.find(p=>p.id===t.project_id);
+          if(lbl&&proj)lbl.textContent=proj.name.slice(0,10);
+        });
+        const tbody=doc.querySelector("tbody");
+        if(tbody&&projectsData&&projectsData.length>0){
+          tbody.innerHTML="";
+          projectsData.slice(0,5).forEach(proj=>{
+            const t=latestByProj[proj.id]||{physical_pct:0,financial_pct:0,income:0,expenses_total:0};
+            const ph=Math.round(parseNumber(t.physical_pct)), fh=Math.round(parseNumber(t.financial_pct));
+            const inc=parseNumber(t.income), exp=parseNumber(t.expenses_total), pend=inc-exp;
+            const sc=proj.status==="Active"?"bg-secondary-container text-on-secondary-container":proj.status==="Delayed"?"bg-error-container text-on-error-container":"bg-tertiary-fixed text-on-tertiary-fixed";
+            const tr=doc.createElement("tr"); tr.className="hover:bg-surface-container-low transition-colors";
+            tr.innerHTML='<td class="p-4 font-semibold">'+proj.name+'</td><td class="p-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium '+sc+'">'+proj.status+'</span></td><td class="p-4"><div class="flex items-center gap-2"><div class="w-full bg-surface-variant rounded-full h-2 overflow-hidden"><div class="bg-primary-container h-2 rounded-full" style="width:'+ph+'%"></div></div><span class="font-data-label text-primary-container">'+ph+'%</span></div></td><td class="p-4"><div class="flex items-center gap-2"><div class="w-full bg-surface-variant rounded-full h-2 overflow-hidden"><div class="bg-[#e28743] h-2 rounded-full" style="width:'+fh+'%"></div></div><span class="font-data-label text-[#e28743]">'+fh+'%</span></div></td><td class="p-4 text-right font-data-label">Q '+inc.toLocaleString("es-GT",{minimumFractionDigits:2})+'</td><td class="p-4 text-right font-data-label">Q '+exp.toLocaleString("es-GT",{minimumFractionDigits:2})+'</td><td class="p-4 text-right font-data-label'+(pend<0?" text-error":"")+'">Q '+pend.toLocaleString("es-GT",{minimumFractionDigits:2})+'</td>';
+            tbody.appendChild(tr);
+          });
         }
-      }, true);
+      } catch(e){console.error("Tracking sync",e);}
+    }
+
+    // ── Alertas: cargar alertas reales ──
+    if (route === "alerts") {
+      try {
+        const {data:alertsData}=await client.from("alerts").select("id,title,message,type,is_read,created_at").order("created_at",{ascending:false}).limit(20);
+        if(!alertsData||alertsData.length===0)return;
+        const tbody=doc.querySelector("tbody")||doc.querySelector(".divide-y");
+        if(!tbody)return;
+        tbody.innerHTML="";
+        alertsData.forEach(alert=>{
+          const isCrit=alert.type==="Critical", isWarn=alert.type==="Warning";
+          const cc=isCrit?"bg-error-container text-on-error-container":isWarn?"bg-tertiary-fixed-dim text-on-tertiary-fixed-variant":"bg-secondary-container text-on-secondary-container";
+          const icon=isCrit?"error":isWarn?"warning":"info";
+          const date=alert.created_at?new Date(alert.created_at).toLocaleDateString("es-GT"):"";
+          const tr=doc.createElement("tr"); tr.className="hover:bg-surface-container-low transition-colors"+(alert.is_read?"":" font-semibold");
+          tr.innerHTML='<td class="p-4"><span class="material-symbols-outlined text-'+(isCrit?"error":isWarn?"tertiary":"secondary")+'">'+icon+'</span></td><td class="p-4">'+alert.title+'</td><td class="p-4 text-on-surface-variant">'+(alert.message||"")+'</td><td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-medium '+cc+'">'+(alert.type||"Info")+'</span></td><td class="p-4 text-secondary font-caption">'+date+'</td><td class="p-4"><button class="text-secondary hover:text-primary wm-mark-read" data-id="'+alert.id+'" title="'+(alert.is_read?"Leida":"Marcar leida")+'"><span class="material-symbols-outlined text-sm">'+(alert.is_read?"mark_email_read":"mark_email_unread")+'</span></button></td>';
+          tbody.appendChild(tr);
+        });
+        tbody.addEventListener("click",async e=>{
+          const btn=e.target.closest(".wm-mark-read"); if(!btn)return;
+          await client.from("alerts").update({is_read:true}).eq("id",btn.dataset.id).catch(()=>{});
+          btn.querySelector(".material-symbols-outlined").textContent="mark_email_read";
+          btn.closest("tr").classList.remove("font-semibold");
+          showFrameToast(doc,"Alerta marcada como leida.");
+        });
+        const critCount=alertsData.filter(a=>a.type==="Critical"&&!a.is_read).length;
+        const kpiEl=Array.from(doc.querySelectorAll(".font-h1,.font-h2")).find(el=>/^\d+$/.test((el.textContent||"").trim()));
+        if(kpiEl)kpiEl.textContent=String(critCount);
+      } catch(e){console.error("Alerts sync",e);}
+    }
+
+    // ── Cronograma: milestones reales ──
+    if (route === "schedule") {
+      try {
+        const {data:milestones}=await client.from("milestones").select("id,name,due_date,status,project_id").order("due_date",{ascending:true}).limit(30);
+        const {data:projects}=await client.from("projects").select("id,name").limit(20);
+        if(!milestones||milestones.length===0)return;
+        const projMap=Object.fromEntries((projects||[]).map(p=>[p.id,p.name]));
+        const tbody=doc.querySelector("tbody"); if(!tbody)return;
+        tbody.innerHTML="";
+        milestones.forEach(m=>{
+          const due=m.due_date?new Date(m.due_date):null;
+          const dL=due?Math.ceil((due-new Date())/86400000):null;
+          const isLate=dL!==null&&dL<0;
+          const sc=m.status==="Completed"?"bg-secondary-container text-on-secondary-container":isLate?"bg-error-container text-on-error-container":"bg-tertiary-fixed-dim text-on-tertiary-fixed-variant";
+          const tr=doc.createElement("tr"); tr.className="hover:bg-surface-container-low transition-colors";
+          tr.innerHTML='<td class="p-4 font-semibold text-primary">'+m.name+'</td><td class="p-4 text-secondary">'+(projMap[m.project_id]||"—")+'</td><td class="p-4">'+(due?due.toLocaleDateString("es-GT"):"—")+'</td><td class="p-4">'+(dL!==null?(isLate?'<span class="text-error font-semibold">'+Math.abs(dL)+'d retraso</span>':dL+"d restantes"):"—")+'</td><td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-medium '+sc+'">'+(m.status||"Pendiente")+'</span></td>';
+          tbody.appendChild(tr);
+        });
+      } catch(e){console.error("Schedule sync",e);}
+    }
+
+    // ── Operaciones: gastos reales ──
+    if (route === "operations") {
+      try {
+        const {data:expData}=await client.from("expenses").select("id,description,amount,date,category").order("date",{ascending:false}).limit(30);
+        if(!expData||expData.length===0)return;
+        const tbody=doc.querySelector("tbody");
+        if(tbody){
+          tbody.innerHTML="";
+          expData.forEach(exp=>{
+            const cc=exp.category==="Mano de Obra"?"bg-secondary-container text-on-secondary-container":exp.category==="Materiales"?"bg-tertiary-fixed-dim text-on-tertiary-fixed-variant":"bg-surface-variant text-on-surface-variant";
+            const tr=doc.createElement("tr"); tr.className="hover:bg-surface-container-low transition-colors";
+            tr.innerHTML='<td class="p-4">'+(exp.date?new Date(exp.date).toLocaleDateString("es-GT"):"—")+'</td><td class="p-4 font-medium">'+(exp.description||"—")+'</td><td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-medium '+cc+'">'+(exp.category||"Otro")+'</span></td><td class="p-4 text-right font-data-label">Q '+parseNumber(exp.amount).toLocaleString("es-GT",{minimumFractionDigits:2})+'</td>';
+            tbody.appendChild(tr);
+          });
+        }
+        const total=expData.reduce((s,e)=>s+parseNumber(e.amount),0);
+        const kpiEl=doc.querySelector(".font-h2.text-h2,.font-h1.text-h1");
+        if(kpiEl&&/Q|^\d/.test(kpiEl.textContent||""))kpiEl.textContent="Q "+total.toLocaleString("es-GT",{minimumFractionDigits:2});
+      } catch(e){console.error("Operations sync",e);}
+    }
+
+    // ── Informe APU: APU mas reciente ──
+    if (route === "apu-report") {
+      try {
+        const {data:apus}=await client.from("apus").select("id,description,phase,total_price,created_at").order("created_at",{ascending:false}).limit(1);
+        if(!apus||!apus[0])return;
+        const latest=apus[0];
+        const titleEl=doc.querySelector("h1,h2,.font-h2");
+        if(titleEl&&latest.description)titleEl.textContent=latest.description;
+        const totalEl=doc.querySelector(".font-h1,.font-h2.text-on-tertiary-fixed-variant,.bg-tertiary-fixed-dim .font-h2");
+        if(totalEl)totalEl.textContent="Q "+parseNumber(latest.total_price).toLocaleString("es-GT",{minimumFractionDigits:2});
+      } catch(e){console.error("APU-report sync",e);}
+    }
+
+    // ── Resumen cliente: cliente y proyecto mas reciente ──
+    if (route === "client-summary") {
+      try {
+        const {data:clients}=await client.from("clients").select("id,name,email,phone").order("created_at",{ascending:false}).limit(1);
+        const {data:projects}=await client.from("projects").select("name,total_budget,status,typology").order("created_at",{ascending:false}).limit(1);
+        if(clients&&clients[0]){
+          const c=clients[0];
+          const nameEls=Array.from(doc.querySelectorAll(".font-h2,.font-h3")).filter(el=>/cliente|nombre/i.test(el.previousElementSibling?.textContent||el.closest("div")?.querySelector("label,span")?.textContent||""));
+          if(nameEls[0])nameEls[0].textContent=c.name;
+        }
+        if(projects&&projects[0]){
+          const p=projects[0];
+          const budgetEl=doc.querySelector(".font-h1,.font-h2.text-on-tertiary-fixed-variant");
+          if(budgetEl)budgetEl.textContent="Q "+parseNumber(p.total_budget).toLocaleString("es-GT",{minimumFractionDigits:2});
+        }
+      } catch(e){console.error("Client-summary sync",e);}
+    }
+
+    // ── APU Avanzado: precargar 40 renglones ──
+    if (route === "apu-advanced") patchApuRows(doc);
+
+    // ── Formularios: submit handler ──
+    Array.from(doc.querySelectorAll("form")).forEach(form=>{
+      form.addEventListener("submit",async event=>{
+        event.preventDefault(); event.stopPropagation();
+        const submitBtn=form.querySelector('button[type="submit"]');
+        const origText=submitBtn?submitBtn.textContent:"";
+        if(submitBtn)submitBtn.textContent="Guardando...";
+        try {
+          const message=route==="operations"?await saveExpenseForm(form,client):await saveClientForm(doc,form,client);
+          showFrameToast(doc,message); form.reset();
+        } catch(error){
+          showFrameToast(doc,"Error al guardar: "+formatDataError(error));
+        } finally {
+          if(submitBtn)submitBtn.textContent=origText;
+        }
+      },true);
+    });
+  }
+
+  // ── 40 renglones APU por tipologia (precios Guatemala 2024) ──
+  const APU_ROWS = {
+    Residencial:[["Limpieza y chapeo","m2",0.05,18],["Trazo y estaqueado","m2",0.08,12],["Excavacion manual","m3",0.80,95],["Relleno compactado","m3",0.70,85],["Cimiento corrido","ml",1.20,320],["Solera de humedad","ml",1.10,280],["Levantado block 15cm","m2",1.00,185],["Levantado block 20cm","m2",1.00,210],["Solera intermedia","ml",1.10,265],["Solera corona","ml",1.10,270],["Columna C-1 15x15","ml",1.00,420],["Columna C-2 20x20","ml",1.00,580],["Viga V-1 15x20","ml",1.00,480],["Losa tradicional e=10cm","m2",1.05,650],["Losa prefabricada","m2",1.00,520],["Repello + cernido","m2",0.90,95],["Piso ceramico 30x30","m2",1.05,220],["Piso ceramico 60x60","m2",1.05,280],["Azulejo bano","m2",1.05,195],["Puerta madera solida","u",1.00,1850],["Puerta metalica","u",1.00,2200],["Ventana aluminio/vidrio","m2",1.00,680],["Instalacion electrica punto","pto",1.00,185],["Tablero electrico 8 circuitos","u",1.00,1450],["Instalacion hidraulica punto","pto",1.00,220],["Instalacion sanitaria punto","pto",1.00,280],["Fosa septica 1000L","u",1.00,8500],["Pozo de absorcion","u",1.00,4200],["Pintura interior 2 manos","m2",0.95,48],["Pintura exterior","m2",0.95,55],["Cielo falso tabla yeso","m2",1.00,185],["Cielo falso PVC","m2",1.00,145],["Cubierta lamina galvanizada","m2",1.05,185],["Cubierta teja","m2",1.05,320],["Fascia + sofito","ml",1.00,185],["Gradas concreto","ml",1.00,680],["Muro de contencion","m2",1.10,420],["Acera perimetral","m2",1.00,185],["Jardinizacion basica","m2",1.00,45],["Limpieza final de obra","global",1.00,2500]],
+    Comercial:[["Demolicion y desalojo","m3",1.00,185],["Trazo y nivelacion","m2",0.08,15],["Excavacion mecanica","m3",0.40,65],["Zapata aislada Z-1","u",1.00,3200],["Zapata combinada Z-2","u",1.00,5800],["Pedestal P-1 30x30","ml",1.00,680],["Columna metalica HEB","kg",1.00,28],["Viga metalica IPE","kg",1.00,26],["Losa postensada e=12cm","m2",1.05,850],["Muro cortina vidrio","m2",1.00,1850],["Fachada ACM","m2",1.00,1200],["Piso porcelanato 60x60","m2",1.05,380],["Piso epoxido","m2",1.00,285],["Cielo falso Armstrong","m2",1.00,220],["Tabique drywall","m2",1.00,185],["Puerta vidrio templado","u",1.00,4500],["Sistema contra incendios punto","pto",1.00,850],["Aire acondicionado ton","ton",1.00,8500],["Instalacion electrica industrial","pto",1.00,320],["Tablero electrico 24 circuitos","u",1.00,4200],["Red hidraulica comercial","pto",1.00,380],["Trampa de grasa","u",1.00,3500],["Elevador hidraulico","u",1.00,185000],["Rampa acceso vehicular","m2",1.00,480],["Senalizacion horizontal","m2",1.00,85],["Senalizacion vertical","u",1.00,320],["Pintura epoxica","m2",1.00,95],["Impermeabilizacion losa","m2",1.00,185],["Jardineria ornamental","m2",1.00,120],["Iluminacion exterior LED","pto",1.00,680],["CCTV camara","u",1.00,1850],["Control de acceso","u",1.00,3200],["Parqueo adoquin","m2",1.00,285],["Cuneta y bordillo","ml",1.00,185],["Cisterna 5000L","u",1.00,18500],["Bomba hidroneumatica","u",1.00,8500],["Generador electrico","u",1.00,45000],["UPS central","u",1.00,12000],["Rotulacion exterior","m2",1.00,850],["Limpieza y entrega","global",1.00,5000]],
+    Industrial:[["Limpieza terreno mecanica","m2",0.03,8],["Compactacion subrasante","m2",0.05,12],["Base granular e=15cm","m2",0.08,45],["Losa industrial e=15cm","m2",1.05,480],["Losa industrial e=20cm","m2",1.05,620],["Columna metalica W","kg",1.00,32],["Viga de acero W","kg",1.00,30],["Cercha metalica","kg",1.00,35],["Cubierta lamina troquelada","m2",1.05,185],["Cubierta panel sandwich","m2",1.05,380],["Muro prefabricado","m2",1.00,520],["Muro block industrial","m2",1.00,220],["Puerta industrial seccional","m2",1.00,1850],["Porton metalico corredizo","m2",1.00,1200],["Rampa de carga","u",1.00,28000],["Fosa de inspeccion","u",1.00,12000],["Instalacion electrica trifasica","pto",1.00,480],["Tablero trifasico 480V","u",1.00,8500],["Subestacion electrica","u",1.00,185000],["Iluminacion industrial LED","u",1.00,1850],["Red contra incendios","pto",1.00,1200],["Hidrante industrial","u",1.00,8500],["Trampa de aceite","u",1.00,5500],["Planta de tratamiento","u",1.00,85000],["Compresor de aire","u",1.00,28000],["Red de aire comprimido","pto",1.00,680],["Puente grua 5 ton","u",1.00,285000],["Monorriel","ml",1.00,1850],["Piso epoxido industrial","m2",1.00,320],["Senalizacion industrial","u",1.00,185],["Oficinas modulares","m2",1.00,1850],["Servicios sanitarios industriales","u",1.00,18500],["Cisterna industrial 20000L","u",1.00,45000],["Bomba contra incendios","u",1.00,28000],["Cerca perimetral malla","ml",1.00,285],["Garita de seguridad","u",1.00,28000],["Bascula vehicular","u",1.00,185000],["Pavimento asfalto","m2",1.00,185],["Drenaje pluvial industrial","ml",1.00,380],["Limpieza y entrega","global",1.00,8500]],
+    Civil:[["Topografia y replanteo","km",1.00,8500],["Limpieza derecho de via","km",1.00,12000],["Corte de material","m3",0.35,55],["Relleno material selecto","m3",0.60,75],["Subbase granular e=20cm","m2",0.10,65],["Base granular e=15cm","m2",0.08,55],["Carpeta asfaltica e=5cm","m2",0.12,185],["Carpeta asfaltica e=7.5cm","m2",0.15,245],["Concreto hidraulico e=15cm","m2",1.05,380],["Bordillo de concreto","ml",1.00,185],["Cuneta de concreto","ml",1.00,220],["Alcantarilla 36 pulgadas","ml",1.00,1850],["Alcantarilla 48 pulgadas","ml",1.00,2800],["Cabezal de alcantarilla","u",1.00,8500],["Puente viga-losa L=10m","u",1.00,850000],["Muro contencion gavion","m2",1.00,680],["Muro contencion concreto","m2",1.10,850],["Senalizacion horizontal","m2",1.00,85],["Senalizacion vertical","u",1.00,1200],["Guardavias metalico","ml",1.00,480],["Iluminacion vial LED","u",1.00,8500],["Semaforo vehicular","u",1.00,28000],["Acera peatonal","m2",1.00,185],["Rampa accesibilidad","u",1.00,3500],["Drenaje sanitario PVC 6 pulgadas","ml",1.00,285],["Drenaje pluvial PVC 12 pulgadas","ml",1.00,480],["Pozo de visita","u",1.00,8500],["Caja de registro","u",1.00,1850],["Tuberia agua potable 4 pulgadas","ml",1.00,185],["Valvula de compuerta 4 pulgadas","u",1.00,1850],["Hidrante publico","u",1.00,12000],["Paso de rio vado","u",1.00,185000],["Estabilizacion de talud","m2",1.00,320],["Revegetacion talud","m2",1.00,45],["Barrera New Jersey","ml",1.00,680],["Reductor de velocidad","u",1.00,3500],["Estacion de autobus","u",1.00,85000],["Parqueo publico","m2",1.00,285],["Plazuela peatonal","m2",1.00,380],["Limpieza y entrega","global",1.00,12000]],
+    Publica:[["Demolicion edificio existente","m3",1.00,220],["Trazo y nivelacion","m2",0.08,15],["Excavacion y desalojo","m3",0.80,95],["Cimentacion profunda pilotes","u",1.00,28000],["Estructura concreto reforzado","m3",1.05,3200],["Losa nervada e=25cm","m2",1.05,850],["Fachada ventilada","m2",1.00,1850],["Muro cortina","m2",1.00,2200],["Cubierta especial","m2",1.05,680],["Impermeabilizacion total","m2",1.00,220],["Piso granito pulido","m2",1.05,480],["Piso marmol","m2",1.05,850],["Cielo falso especial","m2",1.00,380],["Tabique vidrio templado","m2",1.00,1850],["Instalacion electrica especial","pto",1.00,480],["UPS y generador","u",1.00,85000],["Sistema BMS","global",1.00,185000],["Red de datos Cat6A","pto",1.00,380],["Sistema audiovisual","global",1.00,85000],["CCTV institucional","u",1.00,2800],["Control acceso biometrico","u",1.00,8500],["Aire acondicionado central","ton",1.00,12000],["Elevadores","u",1.00,285000],["Escaleras electricas","u",1.00,185000],["Sistema contra incendios NFPA","pto",1.00,1850],["Planta de tratamiento","u",1.00,185000],["Cisterna + hidroneumatico","u",1.00,85000],["Paneles solares","kWp",1.00,8500],["Jardines institucionales","m2",1.00,185],["Mobiliario urbano","u",1.00,3500],["Senalizacion institucional","u",1.00,850],["Auditorio sala de reuniones","m2",1.00,3500],["Cafeteria institucional","m2",1.00,2800],["Estacionamiento techado","m2",1.00,850],["Cancha deportiva","m2",1.00,380],["Area verde recreativa","m2",1.00,120],["Barda perimetral","ml",1.00,680],["Caseta de vigilancia","u",1.00,45000],["Rotulacion institucional","m2",1.00,1200],["Limpieza y entrega","global",1.00,15000]]
+  };
+
+  function patchApuRows(doc) {
+    if (doc.getElementById("wm-apu-rows-injected")) return;
+    const marker=doc.createElement("meta"); marker.id="wm-apu-rows-injected"; doc.head.appendChild(marker);
+    function getActiveTip(){
+      const active=Array.from(doc.querySelectorAll("button")).find(b=>b.classList.contains("bg-white")||b.classList.contains("font-semibold")||b.classList.contains("shadow-sm"));
+      const lbl=(active?.textContent||"Residencial").trim();
+      if(/comercial/i.test(lbl))return"Comercial"; if(/industrial/i.test(lbl))return"Industrial";
+      if(/civil/i.test(lbl))return"Civil"; if(/p.blica|publica/i.test(lbl))return"Publica";
+      return"Residencial";
+    }
+    function renderRows(tip){
+      const rows=APU_ROWS[tip]||APU_ROWS["Residencial"];
+      const tables=Array.from(doc.querySelectorAll("table"));
+      const apuTable=tables.find(t=>t.querySelector("th")&&/recurso|descripci|item/i.test(t.querySelector("th")?.textContent||""));
+      if(!apuTable)return;
+      const tbody=apuTable.querySelector("tbody"); if(!tbody)return;
+      tbody.innerHTML="";
+      rows.forEach(([desc,unit,rend,price])=>{
+        const sub=(rend*price).toFixed(2);
+        const type=/cuadrilla|mano|labor|oficial|ayudante/i.test(desc)?"Mano de Obra":/herramienta|equipo|maquinaria/i.test(desc)?"Herramienta":"Material";
+        const tr=doc.createElement("tr"); tr.className="border-b border-surface-variant hover:bg-surface-container-lowest transition-colors";
+        tr.innerHTML='<td class="py-data-tight text-primary-container">'+desc+'</td><td class="py-data-tight text-secondary">'+type+'</td><td class="py-data-tight text-right text-secondary">'+rend+'</td><td class="py-data-tight text-right"><input class="w-20 text-right text-[13px] py-1 px-2 border border-outline-variant rounded focus:border-primary-container bg-surface-container-lowest" type="text" value="'+price.toFixed(2)+'"/></td><td class="py-data-tight text-right font-medium text-primary-container">Q '+sub+'</td>';
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll("input").forEach(input=>{
+        input.addEventListener("input",()=>{
+          const row=input.closest("tr"); const cells=row.querySelectorAll("td");
+          const rendVal=parseFloat((cells[2]?.textContent||"0").replace(/,/g,""))||0;
+          const priceVal=parseFloat(input.value.replace(/,/g,""))||0;
+          if(cells[4])cells[4].textContent="Q "+(rendVal*priceVal).toFixed(2);
+          recalculateTotals(doc);
+        });
+      });
+      recalculateTotals(doc);
+    }
+    renderRows(getActiveTip());
+    Array.from(doc.querySelectorAll("button")).forEach(btn=>{
+      const lbl=(btn.textContent||"").trim();
+      if(/^(Residencial|Comercial|Industrial|Civil|P.blica|Publica)$/i.test(lbl)){
+        btn.addEventListener("click",()=>setTimeout(()=>renderRows(getActiveTip()),50));
+      }
     });
   }
 
