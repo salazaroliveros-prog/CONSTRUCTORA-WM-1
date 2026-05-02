@@ -1661,32 +1661,216 @@ const AFTER_LOGIN_ROUTE = "dashboard";
 
     if (route === "dashboard") {
       try {
-        const [{ count: projectCount }, { count: clientCount }, { data: expenses }, { data: tracking }] = await Promise.all([
+        const [{ count: projectCount }, { count: clientCount }, { data: expenses }, { data: tracking }, { data: projects }] = await Promise.all([
           client.from("projects").select("id", { count: "exact", head: true }),
           client.from("clients").select("id", { count: "exact", head: true }),
-          client.from("expenses").select("amount").limit(500),
-          client.from("project_tracking").select("physical_pct, financial_pct, income, expenses_total").order("snapshot_date", { ascending: false }).limit(10)
+          client.from("expenses").select("amount, date").order("date", { ascending: false }).limit(500),
+          client.from("project_tracking").select("physical_pct, financial_pct, income, expenses_total, snapshot_date").order("snapshot_date", { ascending: false }).limit(20),
+          client.from("projects").select("name, status, total_budget, financial_deployed").limit(10)
         ]);
 
-        updateMetricNearLabel(doc, /total de proyectos|proyectos/i, projectCount ?? 0);
-        updateMetricNearLabel(doc, /clientes|cartera/i, clientCount ?? 0);
+        // ── KPI 1: Total de Proyectos ──
+        const kpi1 = doc.querySelector(".font-h1.text-h1.text-primary");
+        if (kpi1) kpi1.textContent = String(projectCount ?? 0);
 
-        const totalExpenses = (expenses || []).reduce((sum, item) => sum + parseNumber(item.amount), 0);
-        if (totalExpenses > 0) {
-          updateMetricNearLabel(doc, /gastos|expenses/i, `Q ${totalExpenses.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+        // ── KPI 2: Presupuesto Activo (suma total_budget de proyectos activos) ──
+        const totalBudget = (projects || []).reduce((s, p) => s + parseNumber(p.total_budget), 0);
+        const kpi2 = doc.querySelector(".font-h1.text-h1.text-on-tertiary-fixed");
+        if (kpi2) {
+          kpi2.textContent = totalBudget >= 1000000
+            ? `Q${(totalBudget / 1000000).toFixed(1)}M`
+            : `Q${totalBudget.toLocaleString("es-GT", { minimumFractionDigits: 0 })}`;
         }
 
-        // Avance promedio físico desde project_tracking
+        // ── KPI 3: Progreso Promedio (desde project_tracking) ──
+        const avgPhysical = tracking && tracking.length > 0
+          ? Math.round(tracking.reduce((s, r) => s + parseNumber(r.physical_pct), 0) / tracking.length)
+          : 0;
+        const kpi3 = doc.querySelector(".font-h1.text-h1.text-primary + span, .font-h1.text-h1.text-primary");
+        // Buscar el KPI de progreso por su contenedor
+        const allKpiContainers = Array.from(doc.querySelectorAll(".col-span-3"));
+        const progressKpi = allKpiContainers.find(el => /progreso promedio/i.test(el.textContent || ""));
+        if (progressKpi) {
+          const val = progressKpi.querySelector(".font-h1");
+          if (val) val.textContent = `${avgPhysical}%`;
+          const bar = progressKpi.querySelector(".bg-primary.h-full.rounded-full");
+          if (bar) bar.style.width = `${avgPhysical}%`;
+        }
+
+        // ── Gráfica Ingresos vs Gastos: actualizar barras con datos reales ──
+        const totalExpenses = (expenses || []).reduce((s, e) => s + parseNumber(e.amount), 0);
+        const totalIncome = (tracking || []).reduce((s, t) => s + parseNumber(t.income), 0);
+        const maxVal = Math.max(totalIncome, totalExpenses, 1);
+        // Actualizar las 4 barras del chart (2 por grupo: ingreso + gasto)
+        const chartBars = Array.from(doc.querySelectorAll(".flex-1.flex.justify-center.items-end.gap-1"));
+        if (chartBars.length >= 4 && tracking && tracking.length > 0) {
+          // Agrupar tracking por mes (últimos 4)
+          const byMonth = {};
+          tracking.forEach(t => {
+            const m = (t.snapshot_date || "").slice(0, 7);
+            if (!byMonth[m]) byMonth[m] = { income: 0, expenses: 0 };
+            byMonth[m].income += parseNumber(t.income);
+            byMonth[m].expenses += parseNumber(t.expenses_total);
+          });
+          const months = Object.keys(byMonth).sort().slice(-4);
+          const maxMonthVal = Math.max(...months.map(m => Math.max(byMonth[m].income, byMonth[m].expenses)), 1);
+          months.forEach((m, i) => {
+            if (!chartBars[i]) return;
+            const bars = chartBars[i].querySelectorAll("div");
+            const incPct = Math.round((byMonth[m].income / maxMonthVal) * 90) + 10;
+            const expPct = Math.round((byMonth[m].expenses / maxMonthVal) * 90) + 10;
+            if (bars[0]) bars[0].style.height = `${incPct}%`;
+            if (bars[1]) bars[1].style.height = `${expPct}%`;
+          });
+          // Actualizar etiquetas del eje X con meses reales
+          const xLabels = doc.querySelectorAll(".flex.justify-between.mt-3 span");
+          const monthNames = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+          months.forEach((m, i) => {
+            if (xLabels[i]) xLabels[i].textContent = monthNames[parseInt(m.slice(5,7)) - 1];
+          });
+        }
+
+        // ── Gráfica Índice de Salud: actualizar barras con datos reales ──
         if (tracking && tracking.length > 0) {
-          const avgPhysical = Math.round(tracking.reduce((s, r) => s + parseNumber(r.physical_pct), 0) / tracking.length);
-          updateMetricNearLabel(doc, /progreso promedio|avance/i, `${avgPhysical}%`);
-          // Actualizar barra de progreso
-          const progressBar = doc.querySelector(".bg-primary.h-full.rounded-full");
-          if (progressBar) progressBar.style.width = `${avgPhysical}%`;
+          const latestTracking = tracking[0];
+          const physPct = parseNumber(latestTracking.physical_pct);
+          const finPct  = parseNumber(latestTracking.financial_pct);
+          // Variación presupuestaria = diferencia entre avance físico y financiero
+          const variance = Math.abs(physPct - finPct);
+          const healthBars = Array.from(doc.querySelectorAll(".bg-surface-variant.h-1\.5.rounded-full.overflow-hidden"));
+          const healthVals = Array.from(doc.querySelectorAll(".text-primary.font-semibold, .text-tertiary-container.font-semibold, .text-secondary.font-semibold"));
+          if (healthBars[0]) { healthBars[0].querySelector(".bg-primary")?.style && (healthBars[0].querySelector(".bg-primary").style.width = `${physPct}%`); }
+          if (healthBars[1]) { healthBars[1].querySelector(".bg-tertiary-container")?.style && (healthBars[1].querySelector(".bg-tertiary-container").style.width = `${variance}%`); }
+          if (healthBars[2]) { healthBars[2].querySelector(".bg-surface-tint")?.style && (healthBars[2].querySelector(".bg-surface-tint").style.width = `${finPct}%`); }
+          if (healthVals[0]) healthVals[0].textContent = `${physPct}%`;
+          if (healthVals[1]) healthVals[1].textContent = `${variance}%`;
+          if (healthVals[2]) healthVals[2].textContent = `${finPct}%`;
         }
+
+        // ── KPI 4: Próximo Hito (desde milestones) ──
+        try {
+          const { data: milestones } = await client.from("milestones")
+            .select("name, due_date, status")
+            .gte("due_date", new Date().toISOString().slice(0,10))
+            .order("due_date", { ascending: true })
+            .limit(1);
+          if (milestones && milestones[0]) {
+            const m = milestones[0];
+            const kpi4Title = doc.querySelector(".font-h3.text-\\[20px\\]");
+            if (kpi4Title) kpi4Title.textContent = m.name;
+            const daysLeft = Math.ceil((new Date(m.due_date) - new Date()) / 86400000);
+            const kpi4Sub = doc.querySelector(".text-error.mt-2 .font-caption");
+            if (kpi4Sub) kpi4Sub.textContent = daysLeft <= 0 ? "Vencido" : `Vence en ${daysLeft} día${daysLeft !== 1 ? "s" : ""}`;
+          }
+        } catch(e) { /* milestones puede estar vacío */ }
+
       } catch(e) {
         console.error("Supabase sync error", e);
         setStatus(formatDataError(e));
+      }
+    }
+
+    // ── Seguimiento: actualizar tabla y gráficas con datos reales ──
+    if (route === "tracking") {
+      try {
+        const { data: trackingData } = await client
+          .from("project_tracking")
+          .select("project_id, physical_pct, financial_pct, income, expenses_total, snapshot_date")
+          .order("snapshot_date", { ascending: false })
+          .limit(50);
+
+        const { data: projectsData } = await client
+          .from("projects")
+          .select("id, name, status, total_budget, financial_deployed")
+          .limit(20);
+
+        if (!trackingData || trackingData.length === 0) return;
+
+        // Agrupar por project_id, tomar el snapshot más reciente
+        const latestByProject = {};
+        trackingData.forEach(t => {
+          if (!latestByProject[t.project_id]) latestByProject[t.project_id] = t;
+        });
+
+        // Actualizar KPI "Total Financial Deployed"
+        const totalDeployed = Object.values(latestByProject).reduce((s, t) => s + parseNumber(t.income), 0);
+        const kpiDeployed = doc.querySelector(".font-h2.text-h2.text-primary-container");
+        if (kpiDeployed) {
+          kpiDeployed.textContent = `Q ${totalDeployed.toLocaleString("es-GT", { minimumFractionDigits: 2 })}`;
+        }
+
+        // Actualizar barras del chart Portfolio Progress
+        const chartGroups = Array.from(doc.querySelectorAll(".flex.flex-col.items-center.gap-2.flex-1"));
+        const projectEntries = Object.values(latestByProject).slice(0, 4);
+        projectEntries.forEach((t, i) => {
+          if (!chartGroups[i]) return;
+          const bars = chartGroups[i].querySelectorAll(".w-1\/3");
+          const physH = Math.max(5, Math.round(parseNumber(t.physical_pct)));
+          const finH  = Math.max(5, Math.round(parseNumber(t.financial_pct)));
+          if (bars[0]) bars[0].style.height = `${physH}%`;
+          if (bars[1]) bars[1].style.height = `${finH}%`;
+          // Actualizar etiqueta del proyecto
+          const label = chartGroups[i].querySelector(".font-caption.text-secondary");
+          const proj = projectsData?.find(p => p.id === t.project_id);
+          if (label && proj) label.textContent = proj.name.slice(0, 10);
+        });
+
+        // Actualizar filas de la tabla con datos reales
+        const tbody = doc.querySelector("tbody");
+        if (tbody && projectsData && projectsData.length > 0) {
+          tbody.innerHTML = "";
+          projectsData.slice(0, 5).forEach(proj => {
+            const t = latestByProject[proj.id] || { physical_pct: 0, financial_pct: 0, income: 0, expenses_total: 0 };
+            const physPct = Math.round(parseNumber(t.physical_pct));
+            const finPct  = Math.round(parseNumber(t.financial_pct));
+            const income   = parseNumber(t.income);
+            const expenses = parseNumber(t.expenses_total);
+            const pending  = income - expenses;
+            const statusColor = proj.status === "Active" ? "bg-secondary-container text-on-secondary-container" :
+                                proj.status === "Delayed" ? "bg-error-container text-on-error-container" :
+                                "bg-tertiary-fixed text-on-tertiary-fixed";
+            const tr = doc.createElement("tr");
+            tr.className = "hover:bg-surface-container-low transition-colors group";
+            tr.innerHTML = `
+              <td class="p-4 font-semibold">${proj.name}</td>
+              <td class="p-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusColor}">${proj.status || "Planning"}</span></td>
+              <td class="p-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-full bg-surface-variant rounded-full h-2 overflow-hidden">
+                    <div class="bg-primary-container h-2 rounded-full" style="width:${physPct}%"></div>
+                  </div>
+                  <span class="font-data-label text-data-label text-primary-container">${physPct}%</span>
+                </div>
+              </td>
+              <td class="p-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-full bg-surface-variant rounded-full h-2 overflow-hidden">
+                    <div class="bg-[#e28743] h-2 rounded-full" style="width:${finPct}%"></div>
+                  </div>
+                  <span class="font-data-label text-data-label text-[#e28743]">${finPct}%</span>
+                </div>
+              </td>
+              <td class="p-4 text-right font-data-label">Q ${income.toLocaleString("es-GT",{minimumFractionDigits:2})}</td>
+              <td class="p-4 text-right font-data-label">Q ${expenses.toLocaleString("es-GT",{minimumFractionDigits:2})}</td>
+              <td class="p-4 text-right font-data-label ${pending < 0 ? "text-error" : ""}">Q ${pending.toLocaleString("es-GT",{minimumFractionDigits:2})}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          // Actualizar totales en tfoot
+          const tfoot = doc.querySelector("tfoot");
+          if (tfoot) {
+            const totIncome   = projectsData.slice(0,5).reduce((s,p) => s + parseNumber((latestByProject[p.id]||{}).income), 0);
+            const totExpenses = projectsData.slice(0,5).reduce((s,p) => s + parseNumber((latestByProject[p.id]||{}).expenses_total), 0);
+            const totPending  = totIncome - totExpenses;
+            const tfCells = tfoot.querySelectorAll("td");
+            if (tfCells[1]) tfCells[1].textContent = `Q ${totIncome.toLocaleString("es-GT",{minimumFractionDigits:2})}`;
+            if (tfCells[2]) tfCells[2].textContent = `Q ${totExpenses.toLocaleString("es-GT",{minimumFractionDigits:2})}`;
+            if (tfCells[3]) { tfCells[3].textContent = `Q ${totPending.toLocaleString("es-GT",{minimumFractionDigits:2})}`; if (totPending < 0) tfCells[3].classList.add("text-error"); }
+          }
+        }
+      } catch(e) {
+        console.error("Tracking sync error", e);
       }
     }
 
