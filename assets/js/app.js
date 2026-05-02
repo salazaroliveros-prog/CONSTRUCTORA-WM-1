@@ -2138,4 +2138,139 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   } else {
     init();
   }
+  function patchApuRows(doc) {
+    if (doc.getElementById("wm-apu-rows-injected")) return;
+    const marker = doc.createElement("meta");
+    marker.id = "wm-apu-rows-injected";
+    doc.head.appendChild(marker);
+
+    // Detectar tipologia activa por el boton seleccionado
+    function getActiveTip() {
+      const tipBtns = Array.from(doc.querySelectorAll("button")).filter(b =>
+        /^(Residencial|Comercial|Industrial|Civil|P.blica|Publica)$/i.test((b.textContent||"").trim())
+      );
+      const active = tipBtns.find(b =>
+        b.classList.contains("bg-white") || b.classList.contains("font-semibold") ||
+        b.classList.contains("shadow-sm") || b.classList.contains("text-primary-container")
+      ) || tipBtns[0];
+      const lbl = (active?.textContent||"Residencial").trim();
+      if (/comercial/i.test(lbl)) return "Comercial";
+      if (/industrial/i.test(lbl)) return "Industrial";
+      if (/civil/i.test(lbl)) return "Civil";
+      if (/p.blica|publica/i.test(lbl)) return "Publica";
+      return "Residencial";
+    }
+
+    // Encontrar la tabla APU de forma robusta
+    function findApuTable() {
+      const tables = Array.from(doc.querySelectorAll("table"));
+      // Buscar por encabezados conocidos
+      return tables.find(t => {
+        const headers = Array.from(t.querySelectorAll("th")).map(th => (th.textContent||"").toLowerCase());
+        return headers.some(h => /recurso|descripci|item|rend|precio|subtotal/.test(h));
+      }) || tables.find(t => t.querySelector("input[type='text']")) || tables[0];
+    }
+
+    // Crear fila APU editable
+    function makeRow(doc, desc, unit, rend, price, isNew) {
+      const sub = (rend * price).toFixed(2);
+      const type = /cuadrilla|mano|labor|oficial|ayudante/i.test(desc) ? "Mano de Obra"
+                 : /herramienta|equipo|maquinaria/i.test(desc) ? "Herramienta" : "Material";
+      const tr = doc.createElement("tr");
+      tr.className = "border-b border-surface-variant hover:bg-surface-container-lowest transition-colors" + (isNew ? " wm-new-row" : "");
+      tr.innerHTML =
+        '<td class="py-1 px-2"><input class="w-full text-[13px] py-1 px-2 border border-outline-variant rounded bg-surface-container-lowest wm-desc" type="text" value="' + desc + '" placeholder="Descripcion..."/></td>' +
+        '<td class="py-1 px-2 text-secondary text-[12px]">' + type + '</td>' +
+        '<td class="py-1 px-2 text-right"><input class="w-16 text-right text-[13px] py-1 px-1 border border-outline-variant rounded bg-surface-container-lowest wm-rend" type="text" value="' + rend + '"/></td>' +
+        '<td class="py-1 px-2 text-right"><input class="w-20 text-right text-[13px] py-1 px-2 border border-outline-variant rounded bg-surface-container-lowest wm-price" type="text" value="' + price.toFixed(2) + '"/></td>' +
+        '<td class="py-1 px-2 text-right font-medium text-primary-container wm-sub">Q ' + sub + '</td>' +
+        '<td class="py-1 px-2 text-center"><button class="wm-del-row text-error hover:text-error" title="Eliminar renglon" style="background:none;border:none;cursor:pointer;min-height:0;padding:2px"><span class="material-symbols-outlined" style="font-size:16px">delete</span></button></td>';
+      return tr;
+    }
+
+    function attachRowListeners(tr, doc) {
+      const rendEl  = tr.querySelector(".wm-rend");
+      const priceEl = tr.querySelector(".wm-price");
+      const subEl   = tr.querySelector(".wm-sub");
+      const recalc  = () => {
+        const r = parseFloat((rendEl.value||"0").replace(/,/g,"")) || 0;
+        const p = parseFloat((priceEl.value||"0").replace(/,/g,"")) || 0;
+        subEl.textContent = "Q " + (r * p).toFixed(2);
+        recalculateTotals(doc);
+      };
+      rendEl.addEventListener("input", recalc);
+      priceEl.addEventListener("input", recalc);
+      tr.querySelector(".wm-del-row").addEventListener("click", () => {
+        tr.remove();
+        recalculateTotals(doc);
+      });
+    }
+
+    function renderRows(tip) {
+      const rows = APU_ROWS[tip] || APU_ROWS["Residencial"];
+      const apuTable = findApuTable();
+      if (!apuTable) return;
+
+      // Asegurar que la tabla tenga los encabezados correctos
+      let thead = apuTable.querySelector("thead");
+      if (!thead) { thead = doc.createElement("thead"); apuTable.prepend(thead); }
+      thead.innerHTML = '<tr class="border-b-2 border-outline-variant font-data-label text-caption text-secondary uppercase"><th class="py-2 px-2 font-normal text-left">Descripcion / Recurso</th><th class="py-2 px-2 font-normal text-left">Tipo</th><th class="py-2 px-2 font-normal text-right">Rend.</th><th class="py-2 px-2 font-normal text-right">Precio Unit. (Q)</th><th class="py-2 px-2 font-normal text-right">Subtotal</th><th class="py-2 px-2 font-normal text-center">Acc.</th></tr>';
+
+      let tbody = apuTable.querySelector("tbody");
+      if (!tbody) { tbody = doc.createElement("tbody"); apuTable.appendChild(tbody); }
+      tbody.innerHTML = "";
+
+      // Renderizar los 40 renglones en orden cronologico (orden del array)
+      rows.forEach(([desc, unit, rend, price]) => {
+        const tr = makeRow(doc, desc, unit, rend, price, false);
+        tbody.appendChild(tr);
+        attachRowListeners(tr, doc);
+      });
+
+      recalculateTotals(doc);
+      ensureAddRowButton(doc, apuTable, tbody, tip);
+    }
+
+    function ensureAddRowButton(doc, apuTable, tbody, tip) {
+      // Eliminar boton anterior si existe
+      const existing = doc.getElementById("wm-add-row-btn");
+      if (existing) existing.remove();
+
+      const style = doc.getElementById("wm-add-row-style");
+      if (!style) {
+        const s = doc.createElement("style");
+        s.id = "wm-add-row-style";
+        s.textContent = "#wm-add-row-btn{display:flex;align-items:center;gap:8px;margin:10px 0;padding:8px 16px;background:#e9c176;color:#1a2b44;border:none;border-radius:6px;font:700 13px/1 Inter,sans-serif;cursor:pointer;transition:background .15s}#wm-add-row-btn:hover{background:#f0d090}";
+        doc.head.appendChild(s);
+      }
+
+      const btn = doc.createElement("button");
+      btn.id = "wm-add-row-btn";
+      btn.type = "button";
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">add_circle</span> Agregar Renglon';
+      btn.addEventListener("click", () => {
+        const tr = makeRow(doc, "", "u", 1, 0, true);
+        tbody.appendChild(tr);
+        attachRowListeners(tr, doc);
+        // Enfocar el campo de descripcion del nuevo renglon
+        const descInput = tr.querySelector(".wm-desc");
+        if (descInput) setTimeout(() => descInput.focus(), 50);
+        recalculateTotals(doc);
+      });
+
+      // Insertar el boton despues de la tabla
+      apuTable.parentNode.insertBefore(btn, apuTable.nextSibling);
+    }
+
+    // Render inicial
+    renderRows(getActiveTip());
+
+    // Re-render al cambiar tipologia
+    Array.from(doc.querySelectorAll("button")).forEach(btn => {
+      const lbl = (btn.textContent||"").trim();
+      if (/^(Residencial|Comercial|Industrial|Civil|P.blica|Publica)$/i.test(lbl)) {
+        btn.addEventListener("click", () => setTimeout(() => renderRows(getActiveTip()), 80));
+      }
+    });
+  }
 })();
