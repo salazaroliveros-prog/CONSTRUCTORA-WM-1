@@ -28,12 +28,14 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   ];
 
   const routeById = new Map(routes.map((route) => [route.id, route]));
+  const moduleCache = new Map(); // Cache de iframes precargados
   let iframe = null;
   let nav = null;
   let title = null;
   let status = null;
   let supabaseClient = null;
   let currentSession = null;
+  let currentRouteRendered = null;
 
   function getConfig() {
     return window.CONSTRUCTORA_WM_CONFIG || {};
@@ -49,10 +51,24 @@ const AFTER_LOGIN_ROUTE = "dashboard";
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: "wm-auth-session"
+        storageKey: "wm-auth-session",
+        flowType: "pkce"
+      },
+      global: {
+        headers: { "x-client-info": "constructora-wm/1.0" }
       }
     });
     return supabaseClient;
+  }
+
+  // Devuelve cliente con sesión activa garantizada o null
+  async function getAuthedClient() {
+    const client = getSupabase();
+    if (!client) return null;
+    if (currentSession?.access_token) return client;
+    const { data: { session } } = await client.auth.getSession();
+    if (session) { currentSession = session; return client; }
+    return null;
   }
 
   function isConfigured() {
@@ -131,34 +147,44 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       return;
     }
 
+    // Evitar re-render del mismo módulo
+    if (currentRouteRendered === route.id) return;
+    currentRouteRendered = route.id;
+
     const shell = document.querySelector(".app-shell");
     shell.classList.remove("is-login-screen");
-
-    // Collapse sidebar after selecting a module
     if (!shell.classList.contains("is-collapsed")) {
       shell.classList.add("is-collapsed");
     }
 
-    // Show loader
     const loader = document.getElementById("wm-loader-overlay");
-    if (loader) loader.classList.add("active");
-    iframe.classList.add("loading");
 
-    iframe.src = route.path;
-    title.textContent = route.label;
-
-    iframe.onload = () => {
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      if (!iframeDoc) return;
-
-      // Suppress Tailwind CDN production warning inside iframes
-      const twScript = iframeDoc.querySelector('script[src*="cdn.tailwindcss.com"]');
-      if (twScript) twScript.removeAttribute("src");
-
-      syncDarkModeToIframe();
+    // Si el módulo está en cache, cargarlo instantáneamente
+    if (moduleCache.has(route.id)) {
       if (loader) loader.classList.remove("active");
       iframe.classList.remove("loading");
-    };
+      const cached = moduleCache.get(route.id);
+      iframe.srcdoc = cached;
+      title.textContent = route.label;
+    } else {
+      if (loader) loader.classList.add("active");
+      iframe.classList.add("loading");
+      iframe.src = route.path;
+      title.textContent = route.label;
+
+      iframe.onload = () => {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) return;
+        // Suprimir Tailwind CDN warning
+        const twScript = iframeDoc.querySelector('script[src*="cdn.tailwindcss.com"]');
+        if (twScript) twScript.removeAttribute("src");
+        // Guardar en cache el HTML procesado
+        try { moduleCache.set(route.id, iframeDoc.documentElement.outerHTML); } catch(e) {}
+        syncDarkModeToIframe();
+        if (loader) loader.classList.remove("active");
+        iframe.classList.remove("loading");
+      };
+    }
 
     Array.from(nav.querySelectorAll("button[data-route]")).forEach((button) => {
       const active = button.dataset.route === route.id;
@@ -166,7 +192,26 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       button.setAttribute("aria-current", active ? "page" : "false");
     });
 
-    setStatus(isConfigured() ? "Supabase configurado" : "Modo demo: configura Supabase para autenticacion real");
+    setStatus(isConfigured() ? "" : "Modo demo");
+
+    // Precargar los 2 módulos más probables en background
+    prefetchAdjacentRoutes(route.id);
+  }
+
+  function prefetchAdjacentRoutes(currentId) {
+    const idx = routes.findIndex(r => r.id === currentId);
+    const toPrefetch = [
+      routes[idx + 1],
+      routes[idx - 1]
+    ].filter(r => r && !moduleCache.has(r.id));
+
+    toPrefetch.forEach(r => {
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = r.path;
+      link.as = "document";
+      document.head.appendChild(link);
+    });
   }
 
   function makeIcon(name) {
@@ -476,11 +521,33 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   }
 
   function normalizeStitchScreen(doc) {
+    // Bloquear recursos lentos ANTES de que carguen
+    blockSlowResources(doc);
     ensureGlobalStyle(doc);
     normalizeLanguage(doc);
     normalizeCurrency(doc);
     normalizeLogo(doc);
     doc.documentElement.lang = "es";
+  }
+
+  function blockSlowResources(doc) {
+    // Eliminar Google Fonts duplicadas (cada módulo las carga 2 veces)
+    const fontLinks = Array.from(doc.querySelectorAll('link[href*="fonts.googleapis.com"], link[href*="fonts.gstatic.com"]'));
+    const seen = new Set();
+    fontLinks.forEach(link => {
+      const key = link.href.split('?')[0];
+      if (seen.has(key)) { link.remove(); return; }
+      seen.add(key);
+      // Hacer async para no bloquear render
+      link.media = 'print';
+      link.onload = () => { link.media = 'all'; };
+    });
+    // Eliminar Tailwind CDN completamente (ya tenemos estilos inyectados)
+    doc.querySelectorAll('script[src*="cdn.tailwindcss.com"]').forEach(s => s.remove());
+    // Eliminar scripts no necesarios
+    doc.querySelectorAll('script:not(#tailwind-config):not([type="module"])').forEach(s => {
+      if (s.src && !s.src.includes('tailwind')) s.remove();
+    });
   }
 
   function ensureGlobalStyle(doc) {
@@ -1473,34 +1540,21 @@ const AFTER_LOGIN_ROUTE = "dashboard";
   }
 
   async function patchDataSync(doc, route) {
-    const client = getSupabase();
+    const client = await getAuthedClient();
     if (!client) return;
-    // Re-check session in case it was refreshed
-    if (!currentSession) {
-      const { data: { session } } = await client.auth.getSession();
-      currentSession = session;
-    }
-    if (!currentSession) return;
 
     prepareKnownForms(doc, route);
     ensureModulePersistActions(doc, route, client);
 
     if (route === "dashboard") {
       try {
-        // Ensure session token is fresh before querying
-        const { data: { session: freshSession } } = await client.auth.getSession();
-        if (!freshSession) return;
-        currentSession = freshSession;
-
         const [{ count: projectCount }, { count: clientCount }, { data: expenses }] = await Promise.all([
           client.from("projects").select("id", { count: "exact", head: true }),
           client.from("clients").select("id", { count: "exact", head: true }),
           client.from("expenses").select("amount").limit(500)
         ]);
-
         updateMetricNearLabel(doc, /total de proyectos|proyectos/i, projectCount ?? 0);
         updateMetricNearLabel(doc, /clientes|cartera/i, clientCount ?? 0);
-
         const totalExpenses = (expenses || []).reduce((sum, item) => sum + parseNumber(item.amount), 0);
         if (totalExpenses > 0) {
           updateMetricNearLabel(doc, /gastos|expenses/i, `Q ${totalExpenses.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
@@ -1512,16 +1566,12 @@ const AFTER_LOGIN_ROUTE = "dashboard";
     }
 
     Array.from(doc.querySelectorAll("form")).forEach((form) => {
-      if (route === "login" || route === "legacy-login") return;
-
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
         event.stopPropagation();
-        
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn ? submitBtn.textContent : '';
         if (submitBtn) submitBtn.textContent = 'Guardando...';
-
         try {
           const message = route === "operations"
             ? await saveExpenseForm(form, client)
@@ -1687,7 +1737,10 @@ const AFTER_LOGIN_ROUTE = "dashboard";
           history.replaceState(null, "", window.location.pathname + "#/dashboard");
         }
         hideLoginScreen();
-        window.addEventListener("hashchange", () => renderRoute(currentRouteId()));
+        window.addEventListener("hashchange", () => {
+          currentRouteRendered = null;
+          renderRoute(currentRouteId());
+        });
         navigate(AFTER_LOGIN_ROUTE);
         return;
       }
@@ -1698,7 +1751,10 @@ const AFTER_LOGIN_ROUTE = "dashboard";
       }
     }
 
-    window.addEventListener("hashchange", () => renderRoute(currentRouteId()));
+    window.addEventListener("hashchange", () => {
+      currentRouteRendered = null;
+      renderRoute(currentRouteId());
+    });
     navigate(currentRouteId());
   }
 
