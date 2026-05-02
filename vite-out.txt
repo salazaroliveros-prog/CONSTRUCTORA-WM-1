@@ -19,3 +19,5 @@ Port 3001 is in use, trying another one...
 [2m5:13:22 p. m.[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Users/wilso/Documents/APPS/constructoraWM-1/assets/js/app.js[22m
 [2m5:15:08 p. m.[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Users/wilso/Documents/APPS/constructoraWM-1/assets/js/app.js[22m
 [2m5:19:10 p. m.[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mC:/Users/wilso/Documents/APPS/constructoraWM-1/assets/js/app.js[22m
+
+c:\Users\wilso\Documents\APPS\constructoraWM-1>

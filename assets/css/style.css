@@ -38,9 +38,10 @@ button {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   background: #f1f5f9;
-  transition: grid-template-columns 0.4s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.3s ease;
+  transition: grid-template-columns 0.25s cubic-bezier(0.25, 1, 0.5, 1);
   position: relative;
   overflow: hidden;
+  contain: layout style;
 }
 
 body.dark-mode .app-shell {
@@ -72,16 +73,17 @@ body.dark-mode .app-shell {
   flex-direction: column;
   gap: 18px;
   padding: 22px 16px;
-  background: rgba(248, 250, 252, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(248, 250, 252, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: #1a2b44;
   border-right: 1px solid rgba(219, 227, 239, 0.6);
   box-sizing: border-box;
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease, background-color 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease;
   overflow: hidden;
   z-index: 10;
-  will-change: transform, opacity;
+  will-change: transform;
+  contain: layout style;
 }
 
 body.dark-mode .app-sidebar {
@@ -276,8 +278,9 @@ body.dark-mode .app-header-btn:hover {
   border: 0;
   background: #ffffff;
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.15s ease;
   border-radius: 0;
+  contain: strict;
 }
 
 body.dark-mode #app-frame {
